@@ -2,5 +2,7 @@
   "name": "NSH Todo",
   "id": "com.example.nshtodo",
   "version": "1.0.0",
-  "build": 1
+  "build": 1,
+  "schemes": ["nshtodo"],
+  "theme": "theme.json"
 }

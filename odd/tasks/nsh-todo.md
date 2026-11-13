@@ -48,7 +48,7 @@ views (UIKit, Android views) from TSX or Rust, with shadcn-style theme tokens an
 ## Tasks
 
 - [x] T1 Scaffold: `nsh init --template ts`, git, Makefile. Route: inline (mechanical).
-- [ ] T2 App with tests first: theme, ui layer, four tabs, sheets, persistence. Route: delegated writer (many non-trivial files).
+- [x] T2 App with tests first: theme, ui layer, four tabs, sheets, persistence. Route: delegated writer (many non-trivial files). Evidence: RED `make test` 11 tests: 0 passed, 11 failed (scaffold counter); GREEN 11 tests: 11 passed; `make check` clean; `nsh build` no warnings; iOS 26.5 simulator run, light and dark, no runtime errors (not committed).
 - [ ] T3 Verify: `nsh check`, `nsh test`, run on iOS Simulator and Android emulator, screenshots light/dark. Route: inline per-action.
 
 ## Acceptance criteria
