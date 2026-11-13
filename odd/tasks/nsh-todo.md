@@ -49,7 +49,7 @@ views (UIKit, Android views) from TSX or Rust, with shadcn-style theme tokens an
 
 - [x] T1 Scaffold: `nsh init --template ts`, git, Makefile. Route: inline (mechanical).
 - [x] T2 App with tests first: theme, ui layer, four tabs, sheets, persistence. Route: delegated writer (many non-trivial files). Evidence: RED `make test` 11 tests: 0 passed, 11 failed (scaffold counter); GREEN 11 tests: 11 passed; `make check` clean; `nsh build` no warnings; iOS 26.5 simulator run, light and dark, no runtime errors (not committed).
-- [ ] T3 Verify: `nsh check`, `nsh test`, run on iOS Simulator and Android emulator, screenshots light/dark. Route: inline per-action.
+- [x] T3 Verify: `nsh check`, `nsh test`, run on iOS Simulator and Android emulator, screenshots light/dark. Route: inline per-action. Evidence (parent): `make check` clean, `make test` 11/11; iOS 26.5 Home/Tasks light+dark reviewed; Android API 35 emulator via `nsh run --target android`: Home light+dark, Tasks, Categories reviewed, tab switching works.
 
 ## Acceptance criteria
 
@@ -61,6 +61,14 @@ views (UIKit, Android views) from TSX or Rust, with shadcn-style theme tokens an
 
 - 2026-11-13: nsh 0.5.0 installed to `~/.nsh` (release tarball, SHA-256 verified); scaffold `nsh check` ok, `nsh test` 1 passed.
 
+## Known gaps (NSH 0.5.0)
+
+- Android tab icons are system `android:ic_menu_*` drawables: `nsh package`/dev host bundle only the launcher icon (`crates/nsh-cli/src/android.rs`: "Resources: only the launcher icon"), so a TSX app cannot ship its own.
+- iOS tab bar renders as the classic bar, not the iOS 26 floating glass capsule.
+- No swipe-to-delete: delete is a long-press context menu.
+- Headless tests switch tabs through deep links (`nshtodo://<tab>`): the system TabBar is not pressable headless.
+- Dark mode glass tiles use a white-tinted blur (native glass went near-black over the deep hero).
+
 ## Next step
 
-T2.
+Done.
