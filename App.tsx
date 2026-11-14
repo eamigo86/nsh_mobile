@@ -1,11 +1,15 @@
-// The app shell: the four pages behind the system tab bar, and the deep links that switch them.
-import { mount, platform, UrlScheme, View } from "nsh";
+// The app shell: the four pages behind the tabs, and the deep links that switch them. iOS and Android
+// have the system tab bar; the desktops and the web have none, so `Tabs` draws a sidebar (a bottom
+// bar in the web's phone idiom).
+import { mount, platform, Text, UrlScheme, View } from "nsh";
+import { Tab, Tabs } from "nsh/base";
 import { TabBar } from "nsh/mobile";
 import { Categories } from "./pages/Categories";
 import { Home } from "./pages/Home";
 import { Settings } from "./pages/Settings";
 import { Tasks } from "./pages/Tasks";
-import { currentTab, setTab, type Tab, TABS } from "./store";
+import { Icon, type IconName } from "./ui/icon";
+import { currentTab, setTab, type Tab as TabName, TABS } from "./store";
 
 // SF Symbols on iOS; the system's own drawables on Android (the app ships none).
 const ICONS = {
@@ -14,7 +18,33 @@ const ICONS = {
   categories: platform.select({ ios: "list.bullet", android: "android:ic_menu_sort_by_size", default: null }),
   settings: platform.select({ ios: "gearshape", android: "android:ic_menu_preferences", default: null }),
 };
-const TITLES: Record<Tab, string> = { home: "Home", tasks: "Tasks", categories: "Categories", settings: "Settings" };
+const TITLES: Record<TabName, string> = { home: "Home", tasks: "Tasks", categories: "Categories", settings: "Settings" };
+
+const NATIVE_BAR = platform.os === "ios" || platform.os === "android";
+const SIDEBAR = platform.desktop;
+const GLYPHS: Record<TabName, IconName> = { home: "calendar", tasks: "check", categories: "list", settings: "person" };
+
+function Nav() {
+  return (
+    <Tabs
+      class={SIDEBAR ? "w-48 flex-col gap-1 border-r border-border p-3 pt-[env(safe-area-inset-top)]" : "flex-row border-t border-border p-1"}
+      indicatorClass={SIDEBAR ? "inset-x-0 rounded-full bg-primary/15" : "inset-y-1 mx-1 rounded-full bg-primary/15"}
+    >
+      {TABS.map((t) => (
+        <Tab
+          testID={`tab-${t}`}
+          accessibilityLabel={TITLES[t]}
+          selected={currentTab() === t}
+          onPress={() => setTab(t)}
+          class={SIDEBAR ? "flex-row items-center gap-3 px-4 py-3" : "flex-1 flex-row items-center justify-center gap-2 py-3"}
+        >
+          <Icon name={GLYPHS[t]} color={currentTab() === t ? "primary" : "muted-foreground"} />
+          <Text class={currentTab() === t ? "font-semibold text-primary" : "text-muted-foreground"}>{TITLES[t]}</Text>
+        </Tab>
+      ))}
+    </Tabs>
+  );
+}
 
 function App() {
   // `nshtodo://tasks` opens a tab: also how the headless tests switch tabs, which have no tab bar to press.
@@ -23,7 +53,10 @@ function App() {
     if (target) setTab(target);
   });
   return (
-    <View class="flex-1 bg-background">
+    <View class={SIDEBAR ? "flex-1 flex-row bg-background" : "flex-1 bg-background"}>
+      <If when={SIDEBAR}>
+        <Nav />
+      </If>
       <View class="flex-1 pt-[env(safe-area-inset-top)]">
         <If when={currentTab() === "home"}>
           <Home />
@@ -38,11 +71,16 @@ function App() {
           <Settings />
         </If>
       </View>
-      <TabBar
-        items={TABS.map((t) => ({ title: TITLES[t], icon: ICONS[t] }))}
-        selectedIndex={TABS.indexOf(currentTab())}
-        onChange={({ index }) => setTab(TABS[index])}
-      />
+      <If when={NATIVE_BAR}>
+        <TabBar
+          items={TABS.map((t) => ({ title: TITLES[t], icon: ICONS[t] }))}
+          selectedIndex={TABS.indexOf(currentTab())}
+          onChange={({ index }) => setTab(TABS[index])}
+        />
+      </If>
+      <If when={!NATIVE_BAR && !SIDEBAR}>
+        <Nav />
+      </If>
     </View>
   );
 }

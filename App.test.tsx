@@ -200,3 +200,15 @@ test("tasks and the name survive a reload", async () => {
   await tab(second, "settings");
   expect(second.value("id:settings-name")).toBe("Ada");
 });
+
+test("on a desktop the tabs are pressable: a sidebar opens the pages", async () => {
+  const app = await open("./App.tsx", { platform: "macos", clock: { time: new Date(2026, 2, 15, 12, 0, 0) } });
+  expect(app.shows("id:greeting")).toBe(true);
+  await app.press("id:tab-tasks");
+  expect(app.shows("id:add-task")).toBe(true);
+  expect(app.shows("id:greeting")).toBe(false);
+  await app.press("id:tab-categories");
+  expect(app.shows("id:add-category")).toBe(true);
+  await tab(app, "settings");
+  expect(app.shows("id:settings-name")).toBe(true);
+});

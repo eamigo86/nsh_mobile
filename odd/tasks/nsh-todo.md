@@ -50,6 +50,7 @@ views (UIKit, Android views) from TSX or Rust, with shadcn-style theme tokens an
 - [x] T1 Scaffold: `nsh init --template ts`, git, Makefile. Route: inline (mechanical).
 - [x] T2 App with tests first: theme, ui layer, four tabs, sheets, persistence. Route: delegated writer (many non-trivial files). Evidence: RED `make test` 11 tests: 0 passed, 11 failed (scaffold counter); GREEN 11 tests: 11 passed; `make check` clean; `nsh build` no warnings; iOS 26.5 simulator run, light and dark, no runtime errors (not committed).
 - [x] T3 Verify: `nsh check`, `nsh test`, run on iOS Simulator and Android emulator, screenshots light/dark. Route: inline per-action. Evidence (parent): `make check` clean, `make test` 11/11; iOS 26.5 Home/Tasks light+dark reviewed; Android API 35 emulator via `nsh run --target android`: Home light+dark, Tasks, Categories reviewed, tab switching works.
+- [x] T4 Desktop and web navigation with nsh/base Tabs. Route: delegated writer. `TabBar` stays on iOS and Android; every other platform gets `Tabs`/`Tab`: a left sidebar where `platform.desktop`, a bottom bar in the web's phone idiom; pill indicator in `primary/15`, theme tokens only. Evidence: RED `make test` 12 tests: 11 passed, 1 failed (`no pressable view matches id:tab-tasks`); GREEN 12 tests: 12 passed; `make check` clean; `nsh package --target macos --out dist/macos` built (placeholder app id warning only). Not run on a real macOS window.
 
 ## Acceptance criteria
 
@@ -66,7 +67,7 @@ views (UIKit, Android views) from TSX or Rust, with shadcn-style theme tokens an
 - Android tab icons are system `android:ic_menu_*` drawables: `nsh package`/dev host bundle only the launcher icon (`crates/nsh-cli/src/android.rs`: "Resources: only the launcher icon"), so a TSX app cannot ship its own.
 - iOS tab bar renders as the classic bar, not the iOS 26 floating glass capsule.
 - No swipe-to-delete: delete is a long-press context menu.
-- Headless tests switch tabs through deep links (`nshtodo://<tab>`): the system TabBar is not pressable headless.
+- Headless tests on iOS switch tabs through deep links (`nshtodo://<tab>`): the system TabBar is not pressable headless (the desktop `Tabs` is, see T4).
 - Dark mode glass tiles use a white-tinted blur (native glass went near-black over the deep hero).
 
 ## Next step
