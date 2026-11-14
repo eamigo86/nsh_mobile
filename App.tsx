@@ -22,13 +22,13 @@ const TITLES: Record<TabName, string> = { home: "Home", tasks: "Tasks", categori
 
 const NATIVE_BAR = platform.os === "ios" || platform.os === "android";
 const SIDEBAR = platform.desktop;
-const GLYPHS: Record<TabName, IconName> = { home: "calendar", tasks: "check", categories: "list", settings: "person" };
+const GLYPHS: Record<TabName, IconName> = { home: "home", tasks: "check", categories: "list", settings: "settings" };
 
 function Nav() {
   return (
     <Tabs
       class={SIDEBAR ? "w-48 flex-col gap-1 border-r border-border p-3 pt-[env(safe-area-inset-top)]" : "flex-row border-t border-border p-1"}
-      indicatorClass={SIDEBAR ? "inset-x-0 rounded-full bg-primary/15" : "inset-y-1 mx-1 rounded-full bg-primary/15"}
+      indicatorClass={SIDEBAR ? "inset-x-3 rounded-full bg-primary/15" : "inset-y-1 mx-1 rounded-full bg-primary/15"}
     >
       {TABS.map((t) => (
         <Tab
