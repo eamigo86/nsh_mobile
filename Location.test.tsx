@@ -1,0 +1,62 @@
+// The Settings "Location" card: it asks the native host for the position (`host.call("location.current")`)
+// and says why there is none. The host is a stand-in here; the real ones are in native/ios and native/android.
+import { expect, open, test } from "nsh/test";
+
+type Handler = () => Promise<unknown>;
+const launch = (handler?: Handler) =>
+  open("./App.tsx", { host: handler ? { handlers: { "location.current": handler } } : undefined });
+
+async function showLocation(handler?: Handler) {
+  const app = await launch(handler);
+  await app.openWithUrl("nshtodo://settings");
+  await app.press("id:location-button");
+  return app;
+}
+
+test("the position from the host is shown with 5 decimals and the accuracy in metres", async () => {
+  const app = await showLocation(async () => ({ latitude: 40.4168, longitude: -3.7038, accuracy: 12.4 }));
+  await app.waitFor("id:location-latitude");
+  expect(app.shows("id:location-latitude >> text:Latitude 40.41680")).toBe(true);
+  expect(app.shows("id:location-longitude >> text:Longitude -3.70380")).toBe(true);
+  expect(app.shows("id:location-accuracy >> text:Accuracy 12 m")).toBe(true);
+  expect(app.host.calls()).toEqual([{ name: "location.current", data: null }]);
+});
+
+test("a denied permission is explained", async () => {
+  const app = await showLocation(async () => {
+    throw new Error("denied");
+  });
+  await app.waitFor("id:location-message");
+  expect(app.shows("id:location-message >> text:Location permission denied. Allow it in the system settings.")).toBe(true);
+  expect(app.shows("id:location-latitude")).toBe(false);
+});
+
+test("location services turned off are explained", async () => {
+  const app = await showLocation(async () => {
+    throw new Error("disabled");
+  });
+  await app.waitFor("id:location-message");
+  expect(app.shows("id:location-message >> text:Location services are off. Turn them on and try again.")).toBe(true);
+});
+
+test("any other host error is shown as it came", async () => {
+  const app = await showLocation(async () => {
+    throw new Error("timeout waiting for a fix");
+  });
+  await app.waitFor("id:location-message");
+  expect(app.shows("id:location-message >> text:Could not get the location: timeout waiting for a fix")).toBe(true);
+});
+
+test("without a host the card says it needs the native app", async () => {
+  const app = await showLocation();
+  await app.waitFor("id:location-message");
+  expect(app.shows("id:location-message >> text:Location needs the native app.")).toBe(true);
+});
+
+test("a host that does not handle location.current says it needs the native app", async () => {
+  const app = await open("./App.tsx", { host: { handlers: {} } });
+  await app.openWithUrl("nshtodo://settings");
+  await app.press("id:location-button");
+  await app.waitFor("id:location-message");
+  expect(app.shows("id:location-message >> text:Location needs the native app.")).toBe(true);
+});

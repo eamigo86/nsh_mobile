@@ -1,11 +1,62 @@
 // Settings: the display name, shown on an avatar and in Home's greeting.
-import { Text, View } from "nsh";
+import { signal, Text, View } from "nsh";
 import { initial } from "../domain";
 import { displayName, setName } from "../store";
+import { currentPosition, decimals5, type Position } from "../location";
+import { Button, ButtonLabel } from "../ui/button";
+import { Card } from "../ui/card";
 import { Field, TextField } from "../ui/field";
 import { Icon } from "../ui/icon";
 import { heroLinear } from "../ui/surfaces";
 import { Title } from "./Title";
+
+/** The "Location" card: a button, then the position or why there is none. */
+function LocationCard() {
+  const position = signal<Position | null>(null);
+  const message = signal("");
+  const busy = signal(false);
+  const show = async () => {
+    busy.set(true);
+    try {
+      position.set(await currentPosition());
+      message.set("");
+    } catch (e) {
+      position.set(null);
+      message.set((e as Error).message);
+    } finally {
+      busy.set(false);
+    }
+  };
+  return (
+    <Field label="Location">
+      <Card class="gap-3">
+        <Button testID="location-button" disabled={busy()} onPress={show}>
+          <ButtonLabel>Show my location</ButtonLabel>
+        </Button>
+        <If when={position()}>
+          {(p) => (
+            <View class="gap-1">
+              <View testID="location-latitude">
+                <Text class="text-base text-card-foreground">{`Latitude ${decimals5(p().latitude)}`}</Text>
+              </View>
+              <View testID="location-longitude">
+                <Text class="text-base text-card-foreground">{`Longitude ${decimals5(p().longitude)}`}</Text>
+              </View>
+              <View testID="location-accuracy">
+                <Text class="text-sm text-muted-foreground">{`Accuracy ${Math.round(p().accuracy)} m`}</Text>
+              </View>
+            </View>
+          )}
+        </If>
+        <If when={message()}>
+          <View testID="location-message">
+            <Text class="text-sm text-destructive">{message()}</Text>
+          </View>
+        </If>
+      </Card>
+    </Field>
+  );
+}
 
 export function Settings() {
   return (
@@ -31,6 +82,7 @@ export function Settings() {
           />
         </Field>
         <Text class="px-4 text-sm text-muted-foreground">Shown in the greeting on Home.</Text>
+        <LocationCard />
       </View>
     </View>
   );

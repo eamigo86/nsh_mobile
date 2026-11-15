@@ -7,12 +7,23 @@ NSH_HOME     ?= $(HOME)/.nsh
 ANDROID_HOME ?= $(HOME)/Library/Android/sdk
 AVD          ?= $(shell "$(ANDROID_HOME)/emulator/emulator" -list-avds 2>/dev/null | head -1)
 OUT          ?= dist
+NSH_TAG      ?= v0.5.0
+LIBS         ?= native/libs
+IOS_HOST     ?= native/ios
+IOS_DERIVED  ?= $(IOS_HOST)/build
+IOS_APP      ?= $(IOS_DERIVED)/Build/Products/Debug-iphonesimulator/NSHTodoHost.app
+IOS_ID       ?= com.example.nshtodo.host
+ANDROID_HOST ?= native/android
+ANDROID_ID   ?= com.example.nshtodo.host
+JAVA_HOME    ?= $(HOME)/Library/Java/JavaVirtualMachines/openjdk-21.0.1/Contents/Home
 
 export PATH := $(NSH_HOME)/bin:$(PATH)
 export ANDROID_HOME
+export JAVA_HOME
 
 .PHONY: help install components update check test dev ios android web macos emulator \
-        package-ios package-android package-web clean
+        package-ios package-android package-web clean \
+        embed-libs ios-host ios-host-run android-host android-host-run
 
 help: ## List every target
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -69,3 +80,33 @@ package-web: ## Static website
 
 clean: ## Remove packaged output
 	rm -rf $(OUT)
+
+# --- Native hosts (NSH embedded in an iOS and an Android app, with a location bridge) ---------
+
+# Zips are kept in $(LIBS)/download; each platform extracts into a fresh directory (delete $(LIBS)/<platform> to redo).
+embed-libs: ## Fetch the NSH embed libraries (release $(NSH_TAG), SHA-256 checked) into native/libs
+	@set -e; mkdir -p $(LIBS)/download; \
+	for p in ios android; do \
+	  f=nsh-embed-$$p.zip; \
+	  gh release download $(NSH_TAG) -R longbridge/nsh -p "$$f" -p "$$f.sha256" -D $(LIBS)/download --clobber; \
+	  (cd $(LIBS)/download && shasum -a 256 -c "$$f.sha256"); \
+	  mkdir "$(LIBS)/$$p" && unzip -q "$(LIBS)/download/$$f" -d "$(LIBS)/$$p"; \
+	done; \
+	find $(LIBS) -maxdepth 4 \( -name '*.xcframework' -o -name '*.aar' \)
+
+ios-host: ## Build the iOS host app for the simulator (needs embed-libs)
+	nsh build App.tsx --release --out $(IOS_HOST)/nsh
+	xcodebuild -project $(IOS_HOST)/NSHTodoHost.xcodeproj -scheme NSHTodoHost -sdk iphonesimulator \
+	  -configuration Debug CODE_SIGNING_ALLOWED=NO -derivedDataPath $(IOS_DERIVED) build -quiet
+
+ios-host-run: ## Install and launch the iOS host on the booted simulator (DEV=1: connect to nsh dev)
+	xcrun simctl install booted $(IOS_APP)
+	xcrun simctl launch booted $(IOS_ID) $(if $(DEV),--dev-server ws://127.0.0.1:8790/ws)
+
+android-host: ## Build the Android host APK (needs embed-libs)
+	nsh build App.tsx --release --out $(ANDROID_HOST)/app/src/main/assets/nsh
+	cd $(ANDROID_HOST) && ./gradlew assembleDebug
+
+android-host-run: ## Install and launch the Android host on the running emulator or device
+	"$(ANDROID_HOME)/platform-tools/adb" install -r $(ANDROID_HOST)/app/build/outputs/apk/debug/app-debug.apk
+	"$(ANDROID_HOME)/platform-tools/adb" shell am start -n $(ANDROID_ID)/.MainActivity
