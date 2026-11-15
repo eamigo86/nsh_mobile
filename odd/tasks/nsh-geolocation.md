@@ -54,8 +54,8 @@ Objective-C bindings from Rust and still leaves Android to a Gradle project
 ## Tasks
 
 - [x] T1 Branch `feat/nsh-geolocation` from `feat/nsh-todo` (8ce8648); this document. Route: inline (mechanical).
-- [ ] T2 TSX location row with tests first; iOS host project with the Swift bridge; Makefile targets; embed libraries fetched. Route: delegated writer (several non-trivial files, Xcode project).
-- [ ] T3 Android host project with the Kotlin bridge. Route: delegated writer (same writer, Gradle project).
+- [x] T2 TSX location row with tests first; iOS host project with the Swift bridge; Makefile targets; embed libraries fetched. Route: delegated writer (several non-trivial files, Xcode project).
+- [x] T3 Android host project with the Kotlin bridge. Route: delegated writer (same writer, Gradle project).
 - [ ] T4 Verify on the iOS Simulator and the Android emulator with a simulated position; measure lines per platform, build times, app sizes and the dev loop (hot reload through `nsh dev`). Route: inline per-action.
 
 ## Acceptance criteria
@@ -74,6 +74,40 @@ Objective-C bindings from Rust and still leaves Android to a Gradle project
 
 - 2026-11-14: branch created from `feat/nsh-todo` at 8ce8648.
 
+- T2 (7c145be), route: delegated writer. Strict TDD, runner `make test`.
+  - RED (before `Settings` had the card): `error 18 tests: 12 passed, 6 failed` with
+    `no pressable view matches \`id:location-button\``. GREEN: `18 tests: 18 passed, 0 failed (2.2s)`;
+    `make check` clean.
+  - Capability: `host.call` is refused unless `nsh.json` lists it (`warn nsh/host: location.current is not granted`;
+    the 4 tests that went through the host failed that way). Declaring `capabilities` restricts everything else,
+    and the app uses the status bar (`warn the status bar is not granted`), so `nsh.json` now has
+    `"capabilities": { "statusBar": true, "host": ["location.current"] }`: the exact host function only, plus what the
+    app already used. Storage, Keyboard and the system TabBar needed no grant. iOS host calls
+    `grantCapabilities` never (nil: what the app declares).
+  - Embed libs: `make embed-libs` (gh release download v0.5.0, `shasum -a 256 -c` OK for both zips) 25.7 s, into
+    `native/libs/{ios,android}/nsh-embed-*/` (git-ignored; the zips stay in `native/libs/download`). No `rm` in the target.
+  - iOS: `NSHTodoHost` (bundle id `com.example.nshtodo.host`, iOS 15.0 as the framework, arm64 only: the xcframework
+    has no x86_64 slice), hand-written pbxproj with a synchronized root group (objectVersion 77), no new tool.
+    Debug links NativeShellDev, Release NativeShell through per-config `FRAMEWORK_SEARCH_PATHS` on the slice folder:
+    both xcframeworks hold a framework named `NativeShell`, so they cannot be linked together, and an xcframework in
+    the Frameworks phase cannot be chosen per configuration. The search path needs quoting (the repo path has a space).
+    Bundle: `nsh build App.tsx --release --out native/ios/nsh`, added as a folder reference `nsh`.
+  - Build: `make ios-host` = `xcodebuild -project native/ios/NSHTodoHost.xcodeproj -scheme NSHTodoHost -sdk iphonesimulator -configuration Debug CODE_SIGNING_ALLOWED=NO -derivedDataPath native/ios/build build`.
+    `/usr/bin/time -p`: clean (derived data deleted, Xcode caches warm) real 5.83 s; no-op 1.56 s; after a Swift edit 1.83 s.
+    `.app` Debug (NativeShellDev, 1 arch) 75M; Release (checked once, scratch dir) 72M. Not run on a simulator by the writer.
+- T3 (9828f55), route: same writer. AGP 9.5.1 (Kotlin built in, no kotlin plugin), Gradle 9.8.0 wrapper committed,
+  compileSdk/targetSdk 36, minSdk 26, `androidx.activity:activity:1.12.4` for `registerForActivityResult`. `debugImplementation`
+  nsh-dev.aar, `releaseImplementation` nsh.aar from `native/libs`. Bundle in `app/src/main/assets/nsh`, `loadAssetBundle("nsh")`;
+  `--es dev_server ws://...` (make `DEV=1`) connects to `nsh dev`.
+  - Permission: manifest declares ACCESS_FINE_LOCATION and ACCESS_COARSE_LOCATION; the runtime request is one
+    dialog for concurrent calls. `isLocationEnabled` off -> reject "disabled"; denied -> "denied".
+  - Build: `make android-host` = `nsh build` + `./gradlew assembleDebug`. `/usr/bin/time -p`: clean (`build/` deleted,
+    Gradle and AGP already cached and downloaded) real 28.88 s; after a Kotlin edit 1.48 s (warm daemon); no-op 0.54 s.
+    APK Debug (3 ABIs, nsh-dev.aar) 199M. Not run on an emulator by the writer.
+  - Authored lines (no wrapper, no generated): TSX 146 (location.ts 32, Location.test.tsx 62, Settings.tsx +52);
+    Swift 142; Kotlin 132; Gradle Kotlin DSL + properties 48; pbxproj/plist/scheme 275; manifest + theme 26;
+    Makefile +43; nsh.json +4; .gitignore +9.
+
 ## Next step
 
-T2.
+T4: verify on the iOS Simulator and the Android emulator (parent), then measure the dev loop.
