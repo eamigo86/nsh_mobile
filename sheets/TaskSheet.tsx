@@ -1,11 +1,11 @@
 // The add / edit sheet. Its drafts are signals of this sheet, created on each opening from the task shown.
 import { Scroll, signal, Text, View } from "nsh";
-import { TimeField } from "nsh/base";
 import { type Task, dueText } from "../domain";
 import { allCategories, removeTask, saveTask } from "../store";
 import { Field, DateRow, SelectRow, TextField } from "../ui/field";
 import { FormSheet, SheetHeader } from "../ui/sheet";
 import { TextButton } from "../ui/button";
+import { TimePicker } from "../ui/time-picker";
 
 const DEFAULT_TIME = "09:00";
 
@@ -84,7 +84,7 @@ function TaskForm(props: { task: Task | null; onClose: () => void }) {
                   else={<TextButton testID="form-add-time" label="Add time" onPress={() => time.set(DEFAULT_TIME)} />}
                 >
                   <View testID="form-time">
-                    <TimeField accessibilityLabel="Due time" value={time()} onChange={({ value }) => time.set(value)} segmentClass="rounded-md px-1 text-base tabular-nums text-primary focus:bg-primary/15" separatorClass="text-base text-primary" />
+                    <TimePicker value={time()} onChange={(v) => time.set(v)} />
                   </View>
                 </If>
               </View>
