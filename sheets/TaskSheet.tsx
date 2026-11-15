@@ -84,7 +84,7 @@ function TaskForm(props: { task: Task | null; onClose: () => void }) {
                   else={<TextButton testID="form-add-time" label="Add time" onPress={() => time.set(DEFAULT_TIME)} />}
                 >
                   <View testID="form-time">
-                    <TimeField accessibilityLabel="Due time" value={time()} onChange={({ value }) => time.set(value)} segmentClass="text-base text-primary" separatorClass="text-base text-primary" />
+                    <TimeField accessibilityLabel="Due time" value={time()} onChange={({ value }) => time.set(value)} segmentClass="rounded-md px-1 text-base tabular-nums text-primary focus:bg-primary/15" separatorClass="text-base text-primary" />
                   </View>
                 </If>
               </View>
