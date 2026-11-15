@@ -57,7 +57,7 @@ Objective-C bindings from Rust and still leaves Android to a Gradle project
 - [x] T2 TSX location row with tests first; iOS host project with the Swift bridge; Makefile targets; embed libraries fetched. Route: delegated writer (several non-trivial files, Xcode project).
 - [x] T3 Android host project with the Kotlin bridge. Route: delegated writer (same writer, Gradle project).
 - [x] T4 Verify on the iOS Simulator and the Android emulator with a simulated position; measure lines per platform, build times, app sizes and the dev loop (hot reload through `nsh dev`). Route: inline per-action. Evidence below (T4).
-- [ ] T5 (added 2026-11-14 at the user's request) iOS through the app's own Rust crate instead of the Xcode project: a `#[module]` on CoreLocation in the crate, packaged by `nsh package --target ios`; TSX uses it where present and `host.call` elsewhere (Android host unchanged). Verify on the simulator; measure crate lines, first and incremental builds, test time, .app size (stripped), the TabBar look, and TSX hot reload with `nsh run --target ios`. Route: delegated writer, then parent verification.
+- [x] T5 (added 2026-11-14 at the user's request) iOS through the app's own Rust crate instead of the Xcode project: a `#[module]` on CoreLocation in the crate, packaged by `nsh package --target ios`; TSX uses it where present and `host.call` elsewhere (Android host unchanged). Verify on the simulator; measure crate lines, first and incremental builds, test time, .app size (stripped), the TabBar look, and TSX hot reload with `nsh run --target ios`. Route: delegated writer, then parent verification.
 
 ## Acceptance criteria
 
@@ -188,6 +188,32 @@ Objective-C bindings from Rust and still leaves Android to a Gradle project
   APK 3: without x86_64 (54 MB) the host APK is about 78 MB. Store builds (archive, App Bundle) strip and split, so
   the ~60% growth seen in local builds is mostly symbols and the emulator ABI.
 
+- T5 parent verification (2026-11-14, iOS 26.5 Simulator, iPhone 17 Pro):
+  - Packaged crate app (`make ios-crate-run`): the system prompt shows the usage text from `nsh.json`'s
+    `ios.infoPlist`; "Allow While Using App" resolves the waiting call with 40.41680 / -3.70380, accuracy 5 m;
+    after `simctl privacy revoke` -> the denied message. No capability grant was needed for the crate module.
+  - TabBar: the crate app draws the iOS 26 floating capsule; the earlier `nsh package` app without a crate
+    (`dist/ios-sim`) draws the classic bar. `vtool -show-build`: without a crate the runner is the prebuilt one,
+    linked against SDK 18.5 (iOS runs it in compatibility mode); with a crate `nsh package` links it here against
+    SDK 27.2. The look follows the SDK the binary is linked with (the Xcode host links here too), not the crate.
+  - Dev loop: `nsh run --target ios` built the crate and the development host for the simulator in 49.1 s
+    (53 s to connected); a TSX edit reloaded on the device ("rebuilt App.tsx (16ms)"). But the development host
+    (`com.longbridge.nsh.host`) does not carry the app's `ios.infoPlist`: CoreLocation logs "attempted to access
+    privacy-sensitive data without a usage description" and the call never settles (the button stays busy).
+    Location can be tried only in the packaged app, not in the hot-reload host. The bridge also has no timeout.
+  - Toolchain side effect (writer): `nsh init` in a scratch folder made rustup update `stable` to 1.100.0.
+- [x] T5 ticked after this verification.
+
+## Findings (T5)
+
+- The crate path keeps the stock CLI (`nsh package`, `nsh run`) and adds 174 lines of Rust (objc2 delegate),
+  0.74 MB to the stripped binary (+1.6%), a 72 s first release build and 2 s incremental ones.
+- Costs: `nsh test` now compiles and loads the crate (21 tests in 5.7-6.6 s instead of 18 in 2.1 s; 64 s the first
+  time); a device package needs `IPHONEOS_DEPLOYMENT_TARGET=15.0` to link; the hot-reload host cannot use APIs that
+  need Info.plist keys; Android still needs the Gradle project.
+- Compared with the Xcode host: less project machinery on iOS (no pbxproj, no embed download for iOS), but
+  Objective-C bindings from Rust instead of Swift, and no device API testing in the hot-reload loop.
+
 ## Next step
 
-T5: the iOS Rust-crate path.
+Done. Open: a timeout or Info.plist check in both bridges so a missing usage key fails instead of hanging.
