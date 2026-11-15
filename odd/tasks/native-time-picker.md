@@ -42,7 +42,7 @@ nativeModule").
 ## Tasks
 
 - [x] T1 Branch and this document. Route: inline (mechanical).
-- [ ] T2 Native `UIDatePicker` component in the crate and the TSX row, tests first. Route: delegated writer (Rust objc2 + TSX, several non-trivial files).
+- [x] T2 Native `UIDatePicker` component in the crate and the TSX row, tests first. Route: delegated writer (Rust objc2 + TSX, several non-trivial files). Commit 5defc08.
 - [ ] T3 Verify on the iOS 26.5 Simulator (native compact picker opens, value saved and shown in the task row) and that Android still shows `TimeField`. Route: inline per-action.
 
 ## Acceptance criteria
@@ -55,6 +55,32 @@ nativeModule").
 
 - 2026-11-15: branch created from `feat/nsh-geolocation` at 5f6ba7b.
 
+- T2 (5defc08), strict TDD, runner `make test`:
+  - RED 1: Rust `time::tests` (parse/format) with `unimplemented!()` stubs: 4 failed ("not implemented"); TSX
+    `TimePicker.test.tsx` native-branch test failed (`expected false to be true`, TimeField segments still on screen).
+  - GREEN 1: parse/format implemented, 4 Rust tests pass. RED 2: `to_timestamp`/`from_timestamp` tests, 3 failed.
+  - GREEN 2: all 7 Rust unit tests pass; TSX native branch implemented. Final `make test`: 32 tests, 32 passed
+    (21 existing + 4 `TimePicker.test.tsx` + 7 Rust). `make check` ok. `make ios-crate` ok (16.9 s wall, release
+    runner for the simulator; `nshtodo.timePicker` and `NSHTodoTimePickerTarget` are in the binary). Not run: any
+    simulator or device (T3).
+  - Files: `rust/src/time.rs` (pure helpers + tests), `rust/src/time_picker.rs` (iOS component), `rust/src/lib.rs`
+    (`#[native_components(ios)]`, `TimePicker.available()`), `rust/Cargo.toml` (+ `Cargo.lock`), `ui/time-picker.tsx`,
+    `sheets/TaskSheet.tsx`, `TimePicker.test.tsx`.
+  - Decision, registration detection: NSH has no "is registered" API for a component. The crate exports
+    `TimePicker.available()` (`cfg!(target_os = "ios")`); the TSX control reads it through `nativeModule` and falls back
+    to `TimeField` when it is false or the module is missing (an embedding host loading a plain bundle, Android,
+    desktop, web, and the headless runner, which runs on macOS even with `platform: "ios"`). Tests stand it in with
+    `modules: { "nshtodo/native": { "TimePicker.available": true } }`.
+  - Decision, 24-hour handling: the picker's `timeZone` is GMT and its date is the time of day on 1970-01-01, so the
+    `"HH:MM"` value is independent of the device zone and 12/24-hour setting; only what the picker displays follows the
+    device locale. An invalid or empty `value` leaves the picker as it is (the default 09:00 is the TSX's).
+  - Decision, tint: simple, so done. TSX passes prop `tint` (theme.json primary, light `#c2410c` / dark `#e8692e`, by
+    `colorScheme()`); Rust parses it with `nsh_core::Hsla::parse_hex` into a `UIColor`. The hex values are duplicated
+    from theme.json.
+  - Size: `intrinsicContentSize` (fallback `systemLayoutSizeFittingSize`) reported after each value change.
+  - Gap: the headless harness cannot emit native events and the native component has no size there, so the
+    native `change` -> form value path and the picker's layout are only verifiable on a simulator (T3).
+
 ## Next step
 
-T2.
+T3.
