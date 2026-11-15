@@ -43,7 +43,7 @@ nativeModule").
 
 - [x] T1 Branch and this document. Route: inline (mechanical).
 - [x] T2 Native `UIDatePicker` component in the crate and the TSX row, tests first. Route: delegated writer (Rust objc2 + TSX, several non-trivial files). Commit 5defc08.
-- [ ] T3 Verify on the iOS 26.5 Simulator (native compact picker opens, value saved and shown in the task row) and that Android still shows `TimeField`. Route: inline per-action.
+- [x] T3 Verify on the iOS 26.5 Simulator (native compact picker opens, value saved and shown in the task row) and that Android still shows `TimeField`. Route: inline per-action.
 
 ## Acceptance criteria
 
@@ -81,6 +81,13 @@ nativeModule").
   - Gap: the headless harness cannot emit native events and the native component has no size there, so the
     native `change` -> form value path and the picker's layout are only verifiable on a simulator (T3).
 
+- T3 (parent, 2026-11-15, iOS 26.5 Simulator, iPhone 17 Pro, `make ios-crate-run`): after "Add time" the row shows
+  the system compact picker (grey pill, 09:00); a tap opens the native wheels popover (24-hour columns, value in the
+  primary tint); picking 11:01 updates the pill; saving lists the task as "Nov 15, 2026 11:01"; reopening the task
+  (Edit Task) shows 11:01 in the picker; dark mode renders the system dark pill. Android not run on the emulator:
+  its fallback to `TimeField` is covered by the headless test on a non-iOS platform and by `TimePicker.available()`
+  being `cfg!(target_os = "ios")`.
+
 ## Next step
 
-T3.
+Done. Possible follow-ups: the due date as a native compact `UIDatePicker` (date mode); Android `TimePickerDialog` through the Gradle host; the same component in `../nsh_rust`.
