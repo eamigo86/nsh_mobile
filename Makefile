@@ -107,6 +107,7 @@ android-host: ## Build the Android host APK (needs embed-libs)
 	nsh build App.tsx --release --out $(ANDROID_HOST)/app/src/main/assets/nsh
 	cd $(ANDROID_HOST) && ./gradlew assembleDebug
 
-android-host-run: ## Install and launch the Android host on the running emulator or device
+android-host-run: ## Install and launch the Android host on the running emulator or device (DEV=1: connect to nsh dev)
 	"$(ANDROID_HOME)/platform-tools/adb" install -r $(ANDROID_HOST)/app/build/outputs/apk/debug/app-debug.apk
-	"$(ANDROID_HOME)/platform-tools/adb" shell am start -n $(ANDROID_ID)/.MainActivity
+	$(if $(DEV),"$(ANDROID_HOME)/platform-tools/adb" reverse tcp:8790 tcp:8790)
+	"$(ANDROID_HOME)/platform-tools/adb" shell am start -n $(ANDROID_ID)/.MainActivity $(if $(DEV),--es dev_server ws://127.0.0.1:8790/ws)
