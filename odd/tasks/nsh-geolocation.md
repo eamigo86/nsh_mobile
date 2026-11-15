@@ -128,6 +128,46 @@ Objective-C bindings from Rust and still leaves Android to a Gradle project
     (`make android-host` 2.2 s incremental).
   - `make check` clean, `make test` 18/18 after the pin.
 
+- T5 (b7b1f07), route: delegated writer. Strict TDD, runner `make test`. Parent verification on devices pending (T5 not ticked).
+  - Crate: `rust/` (`nsh.json` `"rust": "rust"`), set `nshtodo/native` with `#[module] Location` and `pub async fn current() -> Result<Position, String>`
+    (`Position` is `#[derive(JsObject)]`, so TS gets `Promise<Position>` and a rejection carries the `Err` text). NSH async module functions are
+    supported: they run on the engine thread, so `ios.rs` hops to the main thread with `run_on_main_thread` for CoreLocation and gets the answer
+    back through a `futures-channel` oneshot. iOS only (`cfg(target_os = "ios")`): objc2 0.6, objc2-foundation 0.3, objc2-core-location 0.3
+    (the last one fetched from crates.io), a `define_class!` delegate (`NSHTodoLocationDelegate`) with the same flow as `LocationBridge.swift`
+    (disabled -> "disabled", When-In-Use request, denied/restricted -> "denied", one `requestLocation`, one fix answers all waiting calls).
+    Other targets compile `Err("unavailable")`. `cargo check --target aarch64-apple-ios-sim` and both packages compile first time.
+  - `nsh.json`: `ios.infoPlist.NSLocationWhenInUseUsageDescription` (same text as the Xcode host). The capabilities needed no change on paper:
+    NSH's docs say a registered Rust function is the host's own code and the capability sandbox does not apply to it (`modules/nsh.md`,
+    nativeModule); not exercised on a device yet, so the grant question stays open until the parent runs it.
+  - TSX: `location.ts` calls `nativeModule("nshtodo/native").Location.current` when the set is registered; the "unavailable" error (any
+    platform without the bridge, including `nsh dev` on this Mac and `nsh test`) and a `ReferenceError` (a host whose runtime has no crate: the
+    Android Gradle host, the Xcode iOS host) both fall through to `host.call("location.current")`. `nativeModule` is used instead of
+    `import { Location } from "nshtodo/native"` so that a bundle running where the crate is absent still loads. Checked: a copy of the app
+    without `"rust"` in `nsh.json` runs the 18 earlier tests green (only the 2 crate stand-in tests fail there, as expected), and `nsh build`
+    for the Android host still emits a plain bundle (`make android-host` exit 0, `make ios-host` exit 0).
+  - RED (3 new tests, `location.ts` still host-only): `error 21 tests: 19 passed, 2 failed`
+    (`the Rust crate's position is shown and the host is not asked`: `expected false to be true`, screen showed the host's
+    `Latitude 1.00000`; `a denied permission in the Rust crate is explained`: ``id:location-message` showing never happened in 5000 ms``;
+    the fallback test passed because it already was the old behavior). GREEN: `21 tests: 21 passed, 0 failed (5.7s)`; `make check` clean.
+    Stand-ins: `open(..., { modules: { "nshtodo/native": { "Location.current": async () => ... } } })` replace `nativeModule`'s functions too.
+  - Authored lines: Rust 174 (`ios.rs` 132, `lib.rs` 42) + `Cargo.toml` 17 (+ lockfile); TSX `location.ts` +43/-8 (61 total), tests +40;
+    `nsh.json` +6; Makefile +18. Against T2/T3: Swift 142 + Kotlin 132 + about 350 lines of Xcode and Gradle project files.
+  - Builds (`/usr/bin/time -p`, real): `nsh package --target ios-simulator --out dist/ios-crate-sim` first release build of the crate (crates
+    downloaded, deps never built for iOS release) 71.7 s; after a one-line Rust edit 2.0 s (reverted, rebuilt 1.5 s). Device,
+    `nsh package --target ios --out dist/ios-crate`: first attempt failed to link (`___chkstk_darwin` undefined: the C dependencies, onig and
+    QuickJS, are built with the current SDK, but rustc's default device deployment target is iOS 10); with `IPHONEOS_DEPLOYMENT_TARGET=15.0`
+    it exits 0 in 57.1 s, an unsigned `.app` (the Makefile's `ios-crate-device` sets it). `make check` first run 40 s (builds the crate for
+    the descriptions), then 0.3 s. `make test`: first run with the crate 63.8 s (builds the headless runner with the crate), then 5.7 to
+    6.6 s for 21 tests; T4 had 18 tests in 2.1 s, so `nsh test` now builds and loads the crate and a run is about 3x slower.
+  - Sizes: simulator `.app` 59M, `NSHTodo` 61.8 MB as built, 48.4 MB after `xcrun strip -x -S` on a copy; the baseline `dist/ios-sim`
+    (`.app` 45M) is 47.6 MB, the same after strip (it ships stripped). So the crate adds 0.74 MB (+1.6%) and the unstripped 14 MB is symbols
+    that the Rust release runner keeps. Device `.app` 59M, 61.85 MB as built, 48.38 MB stripped.
+  - Toolchain: no `rustup target add` was needed (`aarch64-apple-ios` and `aarch64-apple-ios-sim` were installed); the first `nsh init` in the
+    scratch directory made rustup update the stable toolchain to 1.100.0.
+  - Not verified: any run on a simulator or device (permission prompt, denied, a fix, the usage text from the packaged `Info.plist`, the
+    capability question above), `nsh run --target ios` with the crate, hot reload of TSX there, a signed `.ipa`, the macOS `nsh dev` path
+    for the crate (it answers "unavailable" and falls back).
+
 ## Findings
 
 - The bridge itself was small: one `host.call` contract, 32 lines of TSX plumbing, about 140 lines each of Swift and
