@@ -57,6 +57,7 @@ Objective-C bindings from Rust and still leaves Android to a Gradle project
 - [x] T2 TSX location row with tests first; iOS host project with the Swift bridge; Makefile targets; embed libraries fetched. Route: delegated writer (several non-trivial files, Xcode project).
 - [x] T3 Android host project with the Kotlin bridge. Route: delegated writer (same writer, Gradle project).
 - [x] T4 Verify on the iOS Simulator and the Android emulator with a simulated position; measure lines per platform, build times, app sizes and the dev loop (hot reload through `nsh dev`). Route: inline per-action. Evidence below (T4).
+- [ ] T5 (added 2026-11-14 at the user's request) iOS through the app's own Rust crate instead of the Xcode project: a `#[module]` on CoreLocation in the crate, packaged by `nsh package --target ios`; TSX uses it where present and `host.call` elsewhere (Android host unchanged). Verify on the simulator; measure crate lines, first and incremental builds, test time, .app size (stripped), the TabBar look, and TSX hot reload with `nsh run --target ios`. Route: delegated writer, then parent verification.
 
 ## Acceptance criteria
 
@@ -141,6 +142,12 @@ Objective-C bindings from Rust and still leaves Android to a Gradle project
 - Not verified: Android API 26-29 fallback (`requestSingleUpdate`), a real device, store-signed builds, and the exact
   error text a real host gives for an unhandled name (covered by a test with a stand-in).
 
+- Size check (parent, 2026-11-14): the iOS host links NativeShell statically and `xcodebuild build` keeps symbols.
+  Release binary 75 MB as built, 49 MB after `strip -x -S`, against 45 MB for the `nsh package` simulator binary
+  stripped the same way (+9%). The `nsh package` APK holds 2 ABIs (arm64-v8a, armeabi-v7a; 79 MB on disk), the host
+  APK 3: without x86_64 (54 MB) the host APK is about 78 MB. Store builds (archive, App Bundle) strip and split, so
+  the ~60% growth seen in local builds is mostly symbols and the emulator ABI.
+
 ## Next step
 
-Done. Possible follow-up: try the iOS Rust-crate path (`--template mixed`) to compare with the Xcode project.
+T5: the iOS Rust-crate path.
