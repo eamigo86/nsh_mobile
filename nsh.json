@@ -5,6 +5,12 @@
   "build": 1,
   "schemes": ["nshtodo"],
   "theme": "theme.json",
+  "rust": "rust",
+  "ios": {
+    "infoPlist": {
+      "NSLocationWhenInUseUsageDescription": "NSH Todo shows your current position in Settings."
+    }
+  },
   "capabilities": {
     "statusBar": true,
     "host": ["location.current"]

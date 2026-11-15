@@ -60,3 +60,43 @@ test("a host that does not handle location.current says it needs the native app"
   await app.waitFor("id:location-message");
   expect(app.shows("id:location-message >> text:Location needs the native app.")).toBe(true);
 });
+
+// The app's own Rust crate (`rust/`, `nshtodo/native`) answers where it is built in (iOS, packaged).
+// Its stand-in here replaces `Location.current`; the host then must not be asked.
+const withCrate = (current: Handler) =>
+  open("./App.tsx", {
+    modules: { "nshtodo/native": { "Location.current": current } },
+    host: { handlers: { "location.current": async () => ({ latitude: 1, longitude: 2, accuracy: 3 }) } },
+  });
+
+test("the Rust crate's position is shown and the host is not asked", async () => {
+  const app = await withCrate(async () => ({ latitude: 40.4168, longitude: -3.7038, accuracy: 5 }));
+  await app.openWithUrl("nshtodo://settings");
+  await app.press("id:location-button");
+  await app.waitFor("id:location-latitude");
+  expect(app.shows("id:location-latitude >> text:Latitude 40.41680")).toBe(true);
+  expect(app.shows("id:location-accuracy >> text:Accuracy 5 m")).toBe(true);
+  expect(app.host.calls()).toEqual([]);
+});
+
+test("a denied permission in the Rust crate is explained", async () => {
+  const app = await withCrate(async () => {
+    throw new Error("denied");
+  });
+  await app.openWithUrl("nshtodo://settings");
+  await app.press("id:location-button");
+  await app.waitFor("id:location-message");
+  expect(app.shows("id:location-message >> text:Location permission denied. Allow it in the system settings.")).toBe(true);
+  expect(app.host.calls()).toEqual([]);
+});
+
+test("a crate without a bridge on this platform falls back to the host", async () => {
+  const app = await withCrate(async () => {
+    throw new Error("unavailable");
+  });
+  await app.openWithUrl("nshtodo://settings");
+  await app.press("id:location-button");
+  await app.waitFor("id:location-latitude");
+  expect(app.shows("id:location-latitude >> text:Latitude 1.00000")).toBe(true);
+  expect(app.host.calls()).toEqual([{ name: "location.current", data: null }]);
+});
