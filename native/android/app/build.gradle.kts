@@ -5,6 +5,8 @@ plugins {
 android {
     namespace = "com.example.nshtodo.host"
     compileSdk = 36
+    // The NDK installed here; without one AGP cannot strip libnsh.so (73 MB per ABI unstripped).
+    ndkVersion = "28.0.13004108"
 
     defaultConfig {
         applicationId = "com.example.nshtodo.host"

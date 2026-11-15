@@ -56,7 +56,7 @@ Objective-C bindings from Rust and still leaves Android to a Gradle project
 - [x] T1 Branch `feat/nsh-geolocation` from `feat/nsh-todo` (8ce8648); this document. Route: inline (mechanical).
 - [x] T2 TSX location row with tests first; iOS host project with the Swift bridge; Makefile targets; embed libraries fetched. Route: delegated writer (several non-trivial files, Xcode project).
 - [x] T3 Android host project with the Kotlin bridge. Route: delegated writer (same writer, Gradle project).
-- [ ] T4 Verify on the iOS Simulator and the Android emulator with a simulated position; measure lines per platform, build times, app sizes and the dev loop (hot reload through `nsh dev`). Route: inline per-action.
+- [x] T4 Verify on the iOS Simulator and the Android emulator with a simulated position; measure lines per platform, build times, app sizes and the dev loop (hot reload through `nsh dev`). Route: inline per-action. Evidence below (T4).
 
 ## Acceptance criteria
 
@@ -108,6 +108,39 @@ Objective-C bindings from Rust and still leaves Android to a Gradle project
     Swift 142; Kotlin 132; Gradle Kotlin DSL + properties 48; pbxproj/plist/scheme 275; manifest + theme 26;
     Makefile +43; nsh.json +4; .gitignore +9.
 
+- T4 (parent, 2026-11-14), route: inline per-action.
+  - iOS 26.5 Simulator (iPhone 17 Pro), position set with `xcrun simctl location booted set 40.41680,-3.70380`:
+    the system prompt shows the usage text; "Don't Allow" -> "Location permission denied. Allow it in the system
+    settings."; after `simctl privacy grant location` -> "Latitude 40.41680 / Longitude -3.70380 / Accuracy 5 m".
+    The embedded app's TabBar draws as the iOS 26 floating capsule here (the `nsh package` app showed the classic bar).
+  - Android API 35 emulator (Pixel 9 Pro XL), `adb emu geo fix -3.70380 40.41680`: "Don't allow" -> denied message;
+    after `pm grant` -> same position, accuracy 5 m; location turned off (`cmd location set-location-enabled false`) ->
+    "Location services are off. Turn them on and try again."
+  - Dev loop: `nsh dev App.tsx --server-only` with both hosts started by `make ios-host-run DEV=1` and
+    `make android-host-run DEV=1`: an edit to `pages/Settings.tsx` showed on both devices without a rebuild
+    ("rebuilt App.tsx (12ms), 2 devices"; seen on the emulator 2.1 s after the save, polling included), and each kept
+    its current tab.
+  - Release APK: AGP 9.5.1 could not strip `libnsh.so` ("Unable to strip the following libraries") because its default
+    NDK is not installed: 192M unsigned. Pinning `ndkVersion = "28.0.13004108"` (installed) strips it: 132M
+    (arm64-v8a 49M, x86_64 54M, armeabi-v7a 33M), release build 6.5 s incremental, 24.8 s first. `nsh package` made
+    an 82.5 MB APK of the same app before. Debug APK 215M (nsh-dev.aar keeps symbols); debug build still passes
+    (`make android-host` 2.2 s incremental).
+  - `make check` clean, `make test` 18/18 after the pin.
+
+## Findings
+
+- The bridge itself was small: one `host.call` contract, 32 lines of TSX plumbing, about 140 lines each of Swift and
+  Kotlin, and permission, denied and disabled states on each side.
+- The larger cost is structural: leaving `nsh package` for an Xcode project and a Gradle project per app
+  (hand-written pbxproj, wrapper, AGP and NDK versions, signing, store packaging), about 350 lines of project files,
+  and ~310 MB of embed libraries to fetch per version.
+- `host.call` must be granted in `nsh.json`, and declaring `capabilities` then restricts everything else
+  (`statusBar` had to be listed too).
+- Hot reload from `nsh dev` keeps working in both embedding hosts.
+- Sizes grow: iOS .app 72-75M (46.6 MB packaged before), Android APK 132M with 3 ABIs once stripped (82.5 MB before).
+- Not verified: Android API 26-29 fallback (`requestSingleUpdate`), a real device, store-signed builds, and the exact
+  error text a real host gives for an unhandled name (covered by a test with a stand-in).
+
 ## Next step
 
-T4: verify on the iOS Simulator and the Android emulator (parent), then measure the dev loop.
+Done. Possible follow-up: try the iOS Rust-crate path (`--template mixed`) to compare with the Xcode project.
