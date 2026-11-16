@@ -1,6 +1,6 @@
 // The app's state. Signals stay private; screens read and change them through these functions.
 // Tasks, categories and the name are kept in one `Storage` entry, written after every change.
-import { batch, Keyboard, setColorScheme, signal, Storage } from "nsh";
+import { batch, Keyboard, Picker, setColorScheme, signal, Storage } from "nsh";
 import {
   type Appearance,
   type Category,
@@ -15,10 +15,13 @@ import {
 } from "./domain";
 
 const KEY = "exact-todo";
+// The profile photo is a JPEG data URI under its own key: the main entry is rewritten on every task change.
+const PHOTO_KEY = "nsh-avatar";
 
 const tasks = signal<Task[]>([]);
 const categories = signal<Category[]>(SEED_CATEGORIES);
 const name = signal("");
+const photo = signal("");
 const onboarded = signal(false);
 const appearance = signal<Appearance>("system");
 const onboardingOpen = signal(false);
@@ -33,11 +36,12 @@ const tab = signal<Tab>("home");
 // The seed is shown until the saved data arrives. Changes wait for it (`afterLoad`), so a slow read
 // can neither lose a change nor overwrite the file with the seed.
 let loaded = false;
-let ready: Promise<void> = Storage.getItem(KEY)
-  .catch(() => null)
-  .then((raw) => {
+const read = (key: string) => Storage.getItem(key).catch(() => null);
+let ready: Promise<void> = Promise.all([read(KEY), read(PHOTO_KEY)])
+  .then(([raw, savedPhoto]) => {
     const saved = parseSaved(raw);
     batch(() => {
+      photo.set(savedPhoto ?? "");
       tasks.set(saved.tasks);
       categories.set(saved.categories);
       name.set(saved.name);
@@ -67,6 +71,8 @@ setInterval(() => now.set(Date.now()), 60_000);
 export const allTasks = () => tasks();
 export const allCategories = () => categories();
 export const displayName = () => name();
+/** The profile photo as a data URI, "" when there is none. */
+export const photoUri = () => photo();
 export const statusFilter = () => filter();
 export const categoryFilterId = () => categoryFilter();
 export const today = () => dayKey(now());
@@ -96,6 +102,31 @@ export const finishOnboarding = () => {
   onboardingOpen.set(false);
   commit(() => onboarded.set(true));
 };
+/** Bytes as a JPEG data URI (`btoa` wants a binary string; chunks keep `fromCharCode` within the stack). */
+function jpegUri(bytes: Uint8Array): string {
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return `data:image/jpeg;base64,${btoa(bin)}`;
+}
+
+/** Sets or clears the photo (shown at once) and keeps it. */
+export const setPhoto = (uri: string) =>
+  afterLoad(() => {
+    photo.set(uri);
+    (uri === "" ? Storage.removeItem(PHOTO_KEY) : Storage.setItem(PHOTO_KEY, uri)).catch(() => {});
+  });
+
+/** Opens the system photo picker for one 256 px JPEG; returns the error to show, or "" (a cancel changes nothing). */
+export async function pickPhoto(): Promise<string> {
+  try {
+    const [picked] = await Picker.pickImages({ multiple: false, maxDimension: 256, quality: 0.8 });
+    if (picked) setPhoto(jpegUri(new Uint8Array(await picked.file.arrayBuffer())));
+    return "";
+  } catch {
+    return "The photo could not be loaded.";
+  }
+}
+
 export const setName = (next: string) => commit(() => name.set(next));
 
 export type TaskDraft = Omit<Task, "id" | "done">;

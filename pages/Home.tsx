@@ -1,7 +1,8 @@
 // Home: a greeting on the peach hero, today's progress, three glass counters and what is up next.
 import { Scroll, Text, View } from "nsh";
-import { allCategories, allTasks, displayName, nowMs, today } from "../store";
-import { categoryOf, dueText, greeting, hourOf, isOverdue, isToday, upNext } from "../domain";
+import { allCategories, allTasks, displayName, today } from "../store";
+import { categoryOf, dueText, greeting, isOverdue, isToday, upNext } from "../domain";
+import { Avatar } from "../ui/avatar";
 import { Card, ColorDot } from "../ui/card";
 import { Icon, type IconName } from "../ui/icon";
 import { Ring } from "../ui/ring";
@@ -21,8 +22,11 @@ export function Home() {
       <Scroll class="flex-1">
         <View class="gap-5 pb-6">
           <View class="mx-4 mt-2 gap-4 rounded-4xl bg-hero-base p-5" style={{ backgroundImage: heroMesh() }} testID="hero">
-            <View testID="greeting">
-              <Text class="text-xl font-semibold text-on-hero">{greeting(displayName(), hourOf(nowMs()))}</Text>
+            <View class="flex-row items-center gap-3">
+              <Avatar testID="home-avatar" photoID="home-avatar-photo" size="sm" />
+              <View class="flex-1" testID="greeting">
+                <Text class="text-xl font-semibold text-on-hero">{greeting(displayName())}</Text>
+              </View>
             </View>
             <View class="flex-row flex-wrap items-center gap-4 rounded-3xl bg-card p-4">
               <Ring fraction={fraction()} label={`${Math.round(fraction() * 100)}%`} caption="Done" />

@@ -43,11 +43,9 @@ export function dayKey(ms: number): string {
 
 export const hourOf = (ms: number) => new Date(ms).getHours();
 
-export const salutation = (hour: number) => (hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening");
-
-export function greeting(name: string, hour: number): string {
+export function greeting(name: string): string {
   const who = name.trim();
-  return who === "" ? "Hello" : `${salutation(hour)}, ${who}`;
+  return who === "" ? "Hello" : `Hello, ${who}`;
 }
 
 /** Overdue is day-based: open, with a due day before today (a time that has passed today does not count). */

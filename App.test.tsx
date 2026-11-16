@@ -175,7 +175,7 @@ test("the settings name greets on Home, and Home counts", async () => {
   await addTask(app, "Now", { day: "15" });
   await app.press("id:done-2");
   await tab(app, "home");
-  expect(app.shows("id:greeting >> text:Good afternoon, Ada")).toBe(true);
+  expect(app.shows("id:greeting >> text:Hello, Ada")).toBe(true);
   expect(app.shows("id:progress-text >> text:1 of 1 done today")).toBe(true);
   expect(app.shows("id:count-all >> text:2")).toBe(true);
   expect(app.shows("id:count-today >> text:1")).toBe(true);

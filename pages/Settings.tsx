@@ -1,15 +1,14 @@
 // Settings: the display name (an avatar and Home's greeting), the appearance, the onboarding and the location.
 import { Scroll, signal, Text, View } from "nsh";
 import { Radio, RadioGroup } from "nsh/base";
-import { type Appearance, APPEARANCES, initial } from "../domain";
-import { appearanceChoice, displayName, setAppearance, setName, showOnboarding } from "../store";
+import { type Appearance, APPEARANCES } from "../domain";
+import { appearanceChoice, displayName, pickPhoto, photoUri, setAppearance, setName, setPhoto, showOnboarding } from "../store";
 import { currentPosition, decimals5, type Position } from "../location";
+import { Avatar } from "../ui/avatar";
 import { Button, ButtonLabel } from "../ui/button";
 import { Card } from "../ui/card";
 import { Field, TextField } from "../ui/field";
-import { Icon } from "../ui/icon";
 import { motion } from "../ui/motion";
-import { heroLinear } from "../ui/surfaces";
 import { Title } from "./Title";
 
 /** The "Location" card: a button, then the position or why there is none. */
@@ -85,20 +84,42 @@ function AppearanceCard() {
   );
 }
 
+/** The profile card: the avatar (a button), the name, and the photo buttons. */
+function ProfileCard() {
+  const error = signal("");
+  const choose = async () => error.set(await pickPhoto());
+  return (
+    <View testID="settings-profile" class="gap-3 rounded-3xl bg-card p-4">
+      <View class="flex-row items-center gap-4">
+        <Avatar testID="avatar" photoID="avatar-photo" size="lg" label="Change profile photo" onPress={choose} />
+        <Text class="flex-1 text-lg font-semibold text-card-foreground">{displayName().trim() === "" ? "Your name" : displayName().trim()}</Text>
+      </View>
+      <View class="flex-row flex-wrap gap-2">
+        <Button testID="choose-photo" variant="glass" onPress={choose}>
+          <ButtonLabel variant="glass">Choose photo</ButtonLabel>
+        </Button>
+        <If when={photoUri() !== ""}>
+          <Button testID="remove-photo" variant="ghost" onPress={() => setPhoto("")}>
+            <ButtonLabel variant="ghost">Remove photo</ButtonLabel>
+          </Button>
+        </If>
+      </View>
+      <If when={error()}>
+        <View testID="photo-error">
+          <Text class="text-sm text-destructive">{error()}</Text>
+        </View>
+      </If>
+    </View>
+  );
+}
+
 export function Settings() {
   return (
     <View class="flex-1">
       <Title>Settings</Title>
       <Scroll class="flex-1">
         <View class="gap-5 p-4">
-          <View testID="settings-profile" class="flex-row items-center gap-4 rounded-3xl bg-card p-4">
-            <View class="size-16 items-center justify-center rounded-full" style={{ backgroundImage: heroLinear() }} testID="avatar">
-              <If when={initial(displayName()) !== ""} else={<Icon name="person" size="lg" color="on-hero" />}>
-                <Text class="text-3xl font-semibold text-on-hero">{initial(displayName())}</Text>
-              </If>
-            </View>
-            <Text class="flex-1 text-lg font-semibold text-card-foreground">{displayName().trim() === "" ? "Your name" : displayName().trim()}</Text>
-          </View>
+          <ProfileCard />
           <Field label="Display name">
             <TextField
               testID="settings-name"
