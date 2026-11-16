@@ -50,14 +50,20 @@ function crateDb(): DbModule | undefined {
  * run (`version` 0) imports what `Storage` held, or the seed, once; the old entry is only trimmed afterwards. */
 async function openDb(saved: ReturnType<typeof parseSaved>) {
   const module = crateDb();
-  if (!module) return undefined;
+  if (!module) {
+    console.info("store: tasks in Storage (no Db module)");
+    return undefined;
+  }
   try {
     // `data_dir()` is not readable from Rust here (no reactive runtime in a promise continuation), so the path goes in.
     await module.open(process.dataDir ?? "");
     if ((await module.version()) === 0) await module.import(saved.tasks, saved.categories);
     const [rows, cats] = await Promise.all([module.tasks(), module.categories()]);
+    // The fallback below is silent for the user, so the log says which store holds the tasks.
+    console.info(`store: tasks in SQLite (${rows.length} tasks, ${cats.length} categories)`);
     return { module, tasks: rows as Task[], categories: cats as Category[] };
-  } catch {
+  } catch (e) {
+    console.warn(`store: tasks in Storage (database unavailable: ${e})`);
     return undefined;
   }
 }
