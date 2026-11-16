@@ -47,7 +47,7 @@ quality, lines of code, difficulty and limitations (2026-11-16 request).
 - [x] T2 Brand: logo and icon assets, app icon in `nsh.json`; record the native launch on each platform. Route: delegated writer (T2-T4, one writer, trigger: 2+ non-trivial files).
 - [x] T3 Animated in-app splash and the 4-step onboarding, tests first. Route: delegated writer.
 - [x] T4 Settings: "Show onboarding again" and Appearance (System/Light/Dark, persisted, applied at launch), tests first. Route: delegated writer.
-- [ ] T5 Verify on the iOS Simulator and the Android emulator (packaged apps): first launch, skip, reopen, theme switch in light and dark; screenshots; lines of code. Route: inline per-action.
+- [x] T5 Verify on the iOS Simulator and the Android emulator (packaged apps): first launch, skip, reopen, theme switch in light and dark; screenshots; lines of code. Route: inline per-action.
 
 ## Acceptance criteria
 
@@ -108,3 +108,24 @@ Factual log, NSH 0.5.0 (f4d68f7). "Verified" means observed in this work; "from 
 - Logic and UI (non-test): T3 about 205 added / 11 removed (splash 89, onboarding 57, App 28/8, store 16/1, domain 4/2); T4 about 80 added / 26 removed (Settings 61/24 incl. re-indent, store 13/2, domain 6/2); DESIGN.md 3.
 - Tests: T3 114 (new) + 13 (`testing.ts`) + 12 changed in three existing files; T4 90. Total tests: 19 new, suite 32 -> 51.
 - Config: `nsh.json` 1 line.
+
+## T5 device verification (2026-11-16)
+
+iPhone 17 Pro Simulator (iOS 26.5, `make ios-crate` package installed with `simctl`) and Pixel 9 Pro XL emulator
+(API 35, `make package-android` APK, 82.5 MB), fresh installs. Launches recorded and read frame by frame.
+
+- iOS: the launch screen is the plain system background (white), then the in-app splash plays as designed (tile pop,
+  lines, the check drawn on a Canvas, name, fade) and hands over to onboarding. The `Carousel` pages with a native
+  finger swipe; Next, Skip, dots and Get started work (no Back button: swipe back). Settings: Appearance is NSH's own
+  segmented radio; Dark applies at once (native tab bar and status bar included) and survives a relaunch; the splash
+  then plays in dark. "Show onboarding again" opens step 1 and Skip returns to Settings, but the native tab bar is
+  mounted again and animates its selection from Home to Settings (about 0.3 s).
+- Android: Android 12+ draws its system splash first (white window, the legacy square icon in a circle, about 1.2 s),
+  then the in-app splash on the page colour, check draw included. First display 3.9 s on the first launch. The page
+  colour runs under the status bar (edge to edge). Swipe, Skip, Settings, Dark and the relaunch work; with Dark chosen
+  the system splash stays white (theme fixed at package time) and the in-app splash then animates in dark.
+- No layout or safe-area fixes were needed on either platform.
+
+Lines (authored, without art masters and docs): production +275 (splash 89, onboarding page 57, Settings +61/-24,
+App +28/-8, store +28/-2, domain +8/-2, nsh.json +1, plus 13 lines of logo layer SVG), tests +229 (Onboarding 114,
+Appearance 90, testing helper 13, fixtures in three existing tests).
