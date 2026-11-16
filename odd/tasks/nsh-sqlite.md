@@ -43,7 +43,7 @@ the database lives in the app's Rust crate (`rusqlite`, bundled SQLite) and TSX 
 
 - [x] T1 Branch and this document. Route: inline (mechanical).
 - [x] T2 Rust `Db` module with rusqlite, TSX store through it with the Storage fallback, one-time import, tests first. Route: delegated writer (Rust and TSX files).
-- [ ] T3 Verify on the iOS Simulator and the Android emulator (packaged apps): upgrade from the blob build keeps the data, add/edit/toggle/delete, relaunch; inspect the database file. Route: inline per-action.
+- [x] T3 Verify on the iOS Simulator and the Android emulator (packaged apps): upgrade from the blob build keeps the data, add/edit/toggle/delete, relaunch; inspect the database file. Route: inline per-action.
 
 ## Acceptance criteria
 
@@ -79,3 +79,18 @@ the database lives in the app's Rust crate (`rusqlite`, bundled SQLite) and TSX 
 - Headless tests build and use the real crate: an unfaked `nativeModule` works there; `Db` without a data dir rejects, so the whole existing suite still runs on the Storage path.
 - Size/time: iOS sim .app +1.9 MB; APK +3.86 MB (x86_64 not packaged); first rusqlite crate build adds roughly 20 s per ABI.
 - Lines: Rust `db.rs` 150 non-test + 96 test, `lib.rs` +64 (module, doc comments), `Cargo.toml` +2; TSX `store.ts` +80/-14, `Sqlite.test.tsx` 190 (new).
+
+## T3 device verification (2026-11-16)
+
+- iOS (iPhone 17 Pro Simulator, iOS 26.5, `make ios-crate` package): before the upgrade the blob build held 4 categories
+  (one custom, "Errands") and 3 tasks (seeded into `storage.json`). After installing the SQLite build over it:
+  `.../Library/Application Support/nsh/com.example.nshtodo/todo.sqlite` beside `storage.json`, `PRAGMA user_version` = 1,
+  4 categories and 3 tasks with the same ids, dates, times and done flags; the `exact-todo` blob now holds only
+  `{name, onboarded, appearance}`. Toggling "Buy groceries" set `done = 1` in the database at once and survived a relaunch.
+- Android (Pixel 9 Pro XL emulator, API 35, arm64-v8a APK): one task created in the blob build through the UI. The
+  database file cannot be read (release APK, not debuggable; no root), and the store fell back to `Storage` silently
+  on any error, so the check was blind. Added a log line (`console.info`/`console.warn`, commit below) that says which
+  store holds the tasks; `adb logcat -s nsh` then showed `js: store: tasks in SQLite (1 tasks, 3 categories)` after the
+  upgrade, and again after a toggle and a relaunch (the toggle kept). First run of the crate's own code on Android in
+  this project: rusqlite (bundled) worked with no Android-specific setup.
+- Commit for the log line: see `git log` (`feat(storage): log whether tasks live in SQLite or fall back to Storage`).
