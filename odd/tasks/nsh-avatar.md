@@ -36,7 +36,7 @@ app (`../exact_mobile`, branch `feat/exact-avatar`) to compare both frameworks (
 
 - [x] T1 Branch and this document. Route: inline (mechanical).
 - [x] T2 Avatar pick, persist and remove in Settings; avatar and "Hello, <name>" on Home; tests first. Route: delegated writer (2+ non-trivial files: store, pages, tests).
-- [ ] T3 Verify on the iOS Simulator and the Android emulator (packaged apps): pick, cancel, relaunch, remove, light and dark. Route: inline per-action.
+- [x] T3 Verify on the iOS Simulator and the Android emulator (packaged apps): pick, cancel, relaunch, remove, light and dark. Route: inline per-action.
 
 ## Acceptance criteria
 
@@ -68,3 +68,18 @@ app (`../exact_mobile`, branch `feat/exact-avatar`) to compare both frameworks (
 - Persistence: its own Storage key (`nsh-avatar`), read together with the main entry in the existing `ready` promise; `fs` is not available on iOS/Android.
 - iOS/Android differences: none in code; the picker is the system one on both (PHPicker / Photo Picker), no permission. Behaviour on devices is T3.
 - Lines per area (authored, with tests): store 39, Settings 45, Home 12, Avatar component 41, tests 94 (new file) plus 1.
+
+## T3 device verification (2026-11-16)
+
+iPhone 17 Pro Simulator (iOS 26.5, `make ios-crate` package) and Pixel 9 Pro XL emulator (API 35, `make package-android`
+APK), the same test portrait and sample landscape photos as the Exact check.
+
+- iOS: "Choose photo" opens PHPicker (system blue tint); a landscape photo shows centre-cropped (`objectFit: "cover"`) in
+  Settings at once and on Home before "Hello, Ada"; the photo survives a relaunch.
+- Android: the system Photo Picker opens (no permission); Settings and Home update at once; the photo survives a
+  relaunch.
+- No fixes were needed on either platform. Cosmetic: "Choose photo" is a filled pill and "Remove photo" a plain text
+  button side by side.
+
+Lines (authored, final): production +120/-24 (store 35, avatar component 41, Settings 33, Home 8, domain 2, nsh.json 1),
+tests +90.
