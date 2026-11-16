@@ -99,8 +99,8 @@ export const initial = (name: string) => name.trim().slice(0, 1).toUpperCase();
 export const colorLabel = (c: CategoryColor) => c.charAt(0).toUpperCase() + c.slice(1);
 
 /** Parses what the file holds; anything unreadable is the seeded, empty app. */
-export function parseSaved(raw: string | null): { tasks: Task[]; categories: Category[]; name: string } {
-  const empty = { tasks: [], categories: SEED_CATEGORIES, name: "" };
+export function parseSaved(raw: string | null): { tasks: Task[]; categories: Category[]; name: string; onboarded: boolean } {
+  const empty = { tasks: [], categories: SEED_CATEGORIES, name: "", onboarded: false };
   if (!raw) return empty;
   try {
     const data = JSON.parse(raw);
@@ -112,6 +112,8 @@ export function parseSaved(raw: string | null): { tasks: Task[]; categories: Cat
       tasks: Array.isArray(data.tasks) ? data.tasks : [],
       categories: categories.length > 0 ? categories : SEED_CATEGORIES,
       name: typeof data.name === "string" ? data.name : "",
+      // Data saved before the onboarding existed belongs to someone who already uses the app.
+      onboarded: typeof data.onboarded === "boolean" ? data.onboarded : true,
     };
   } catch {
     return empty;

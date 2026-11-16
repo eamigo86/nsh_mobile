@@ -3,11 +3,12 @@
 // `TimePicker.available` is stood in to take the native branch: the component is then an empty view of no size
 // (nothing to find or press) and cannot emit `change`. That branch is seen as the TimeField's segments ("09") being
 // absent; the native -> form value wiring is verified on a simulator, not here.
-import { expect, open, test } from "nsh/test";
+import { expect, test } from "nsh/test";
 import type { App } from "nsh/test";
+import { launchApp } from "./testing";
 
 const launch = (options: Record<string, unknown> = {}) =>
-  open("./App.tsx", { clock: { time: new Date(2026, 2, 15, 12, 0, 0) }, ...options });
+  launchApp({ clock: { time: new Date(2026, 2, 15, 12, 0, 0) }, ...options });
 
 /** Opens the add sheet with a due date and a due time (09:00), so the "Due time" row shows its control. */
 async function openDueTime(app: App) {

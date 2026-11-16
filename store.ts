@@ -18,6 +18,9 @@ const KEY = "exact-todo";
 const tasks = signal<Task[]>([]);
 const categories = signal<Category[]>(SEED_CATEGORIES);
 const name = signal("");
+const onboarded = signal(false);
+const onboardingOpen = signal(false);
+const isLoaded = signal(false);
 const filter = signal<Status>("all");
 const categoryFilter = signal("");
 const now = signal(Date.now());
@@ -36,12 +39,14 @@ let ready: Promise<void> = Storage.getItem(KEY)
       tasks.set(saved.tasks);
       categories.set(saved.categories);
       name.set(saved.name);
+      onboarded.set(saved.onboarded);
+      isLoaded.set(true);
     });
     loaded = true;
     return persist();
   });
 const persist = () =>
-  Storage.setItem(KEY, JSON.stringify({ tasks: tasks(), categories: categories(), name: name() })).catch(() => {});
+  Storage.setItem(KEY, JSON.stringify({ tasks: tasks(), categories: categories(), name: name(), onboarded: onboarded() })).catch(() => {});
 const afterLoad = (change: () => void) => {
   if (loaded) change();
   else ready = ready.then(change);
@@ -63,6 +68,10 @@ export const categoryFilterId = () => categoryFilter();
 export const today = () => dayKey(now());
 export const nowMs = () => now();
 export const currentTab = () => tab();
+/** True once the saved data has been read. */
+export const isReady = () => isLoaded();
+/** The onboarding shows on a first launch, and whenever Settings asks for it. */
+export const onboardingVisible = () => isLoaded() && (!onboarded() || onboardingOpen());
 
 export const setTab = (next: Tab) => {
   Keyboard.dismiss();
@@ -70,6 +79,12 @@ export const setTab = (next: Tab) => {
 };
 export const setStatusFilter = (next: Status) => filter.set(next);
 export const setCategoryFilter = (id: string) => categoryFilter.set(id);
+export const showOnboarding = () => onboardingOpen.set(true);
+/** Skip and Get started: the onboarding is done for good. */
+export const finishOnboarding = () => {
+  onboardingOpen.set(false);
+  commit(() => onboarded.set(true));
+};
 export const setName = (next: string) => commit(() => name.set(next));
 
 export type TaskDraft = Omit<Task, "id" | "done">;

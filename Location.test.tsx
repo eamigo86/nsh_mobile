@@ -1,10 +1,11 @@
 // The Settings "Location" card: it asks the native host for the position (`host.call("location.current")`)
 // and says why there is none. The host is a stand-in here; the real ones are in native/ios and native/android.
-import { expect, open, test } from "nsh/test";
+import { expect, test } from "nsh/test";
+import { launchApp } from "./testing";
 
 type Handler = () => Promise<unknown>;
 const launch = (handler?: Handler) =>
-  open("./App.tsx", { host: handler ? { handlers: { "location.current": handler } } : undefined });
+  launchApp({ host: handler ? { handlers: { "location.current": handler } } : undefined });
 
 async function showLocation(handler?: Handler) {
   const app = await launch(handler);
@@ -54,7 +55,7 @@ test("without a host the card says it needs the native app", async () => {
 });
 
 test("a host that does not handle location.current says it needs the native app", async () => {
-  const app = await open("./App.tsx", { host: { handlers: {} } });
+  const app = await launchApp({ host: { handlers: {} } });
   await app.openWithUrl("nshtodo://settings");
   await app.press("id:location-button");
   await app.waitFor("id:location-message");
@@ -64,7 +65,7 @@ test("a host that does not handle location.current says it needs the native app"
 // The app's own Rust crate (`rust/`, `nshtodo/native`) answers where it is built in (iOS, packaged).
 // Its stand-in here replaces `Location.current`; the host then must not be asked.
 const withCrate = (current: Handler) =>
-  open("./App.tsx", {
+  launchApp({
     modules: { "nshtodo/native": { "Location.current": current } },
     host: { handlers: { "location.current": async () => ({ latitude: 1, longitude: 2, accuracy: 3 }) } },
   });

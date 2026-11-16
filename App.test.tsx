@@ -1,14 +1,13 @@
 // Behaviour tests ported from the Exact reference app (app.test.contract), driven like a user.
 // The system TabBar is not pressable headless, so tabs are switched with the app's deep links
 // (`nshtodo://<tab>`); the sheets, rows, chips and forms are pressed and typed into for real.
-import { expect, open, test } from "nsh/test";
+import { expect, test } from "nsh/test";
 import type { App } from "nsh/test";
-
-const KEY = "exact-todo";
+import { KEY, launchApp, RETURNING } from "./testing";
 
 // 2026-03-15 12:00 in the machine's own zone, so the day and the greeting do not depend on it.
 const launch = (storage?: Record<string, string>) =>
-  open("./App.tsx", { clock: { time: new Date(2026, 2, 15, 12, 0, 0) }, storage: storage ?? null });
+  launchApp({ clock: { time: new Date(2026, 2, 15, 12, 0, 0) }, storage: storage ?? RETURNING });
 
 type Saved = {
   tasks: { id: string; title: string; notes: string; categoryId: string; due: string; time: string; done: boolean }[];
@@ -202,7 +201,7 @@ test("tasks and the name survive a reload", async () => {
 });
 
 test("on a desktop the tabs are pressable: a sidebar opens the pages", async () => {
-  const app = await open("./App.tsx", { platform: "macos", clock: { time: new Date(2026, 2, 15, 12, 0, 0) } });
+  const app = await launchApp({ platform: "macos", clock: { time: new Date(2026, 2, 15, 12, 0, 0) } });
   expect(app.shows("id:greeting")).toBe(true);
   await app.press("id:tab-tasks");
   expect(app.shows("id:add-task")).toBe(true);

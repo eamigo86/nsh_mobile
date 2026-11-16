@@ -1,15 +1,17 @@
 // The app shell: the four pages behind the tabs, and the deep links that switch them. iOS and Android
 // have the system tab bar; the desktops and the web have none, so `Tabs` draws a sidebar (a bottom
 // bar in the web's phone idiom).
-import { mount, platform, Text, UrlScheme, View } from "nsh";
+import { mount, platform, signal, Text, UrlScheme, View } from "nsh";
 import { Tab, Tabs } from "nsh/base";
 import { TabBar } from "nsh/mobile";
 import { Categories } from "./pages/Categories";
 import { Home } from "./pages/Home";
+import { Onboarding } from "./pages/Onboarding";
 import { Settings } from "./pages/Settings";
 import { Tasks } from "./pages/Tasks";
 import { Icon, type IconName } from "./ui/icon";
-import { currentTab, setTab, type Tab as TabName, TABS } from "./store";
+import { Splash } from "./ui/splash";
+import { currentTab, finishOnboarding, isReady, onboardingVisible, setTab, type Tab as TabName, TABS } from "./store";
 
 // SF Symbols on iOS; the system's own drawables on Android (the app ships none).
 const ICONS = {
@@ -46,12 +48,7 @@ function Nav() {
   );
 }
 
-function App() {
-  // `nshtodo://tasks` opens a tab: also how the headless tests switch tabs, which have no tab bar to press.
-  UrlScheme.on("open", ({ url }) => {
-    const target = TABS.find((t) => url === `nshtodo://${t}`);
-    if (target) setTab(target);
-  });
+function Shell() {
   return (
     <View class={SIDEBAR ? "flex-1 flex-row bg-background" : "flex-1 bg-background"}>
       <If when={SIDEBAR}>
@@ -80,6 +77,29 @@ function App() {
       </If>
       <If when={!NATIVE_BAR && !SIDEBAR}>
         <Nav />
+      </If>
+    </View>
+  );
+}
+
+function App() {
+  // `nshtodo://tasks` opens a tab: also how the headless tests switch tabs, which have no tab bar to press.
+  UrlScheme.on("open", ({ url }) => {
+    const target = TABS.find((t) => url === `nshtodo://${t}`);
+    if (target) setTab(target);
+  });
+  // The splash covers everything until the saved data is read and its animation has played. The pages
+  // mount when it starts to fade, so the first launch never flashes the tabs and the onboarding is never skipped past.
+  const phase = signal<"splash" | "fading" | "done">("splash");
+  return (
+    <View class="flex-1 bg-background">
+      <If when={phase() !== "splash"}>
+        <If when={onboardingVisible()} else={<Shell />}>
+          <Onboarding onDone={finishOnboarding} />
+        </If>
+      </If>
+      <If when={phase() !== "done"}>
+        <Splash ready={isReady} onReveal={() => phase.set("fading")} onDone={() => phase.set("done")} />
       </If>
     </View>
   );
