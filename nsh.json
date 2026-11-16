@@ -1,6 +1,7 @@
 {
   "name": "NSH Todo",
   "id": "com.example.nshtodo",
+  "icon": "assets/brand/icon-1024.png",
   "version": "1.0.0",
   "build": 1,
   "schemes": ["nshtodo"],
