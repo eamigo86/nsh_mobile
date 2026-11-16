@@ -15,3 +15,6 @@ tokens only. Controls live in `ui/` (button, chip, card, checkbox, field, sheet,
 | Tab change | the system tab bar; page swap is instant (no motion: a content swap, not a place change) | n/a |
 | Progress ring, counters | no motion: values change a few times a day | n/a |
 | Row removed / added | no motion: `List` updates in place (LayoutAnimation is future work) | n/a |
+| Splash (`ui/splash.tsx`) | `createMotion` per layer in one `Animated.parallel`: tile scale 0.6 -> 1.06 -> 1 and fade (450 ms), two lines `scaleX` (250 ms), check mark as a canvas stroke with an animated `lineDashOffset` (300 ms), name rise and fade (300 ms), then a 250 ms fade out; about 1.5 s | logo at rest at once, 400 ms hold, 200 ms plain fade |
+| Onboarding step change | `Carousel` scrolls natively (swipe, Next, dots); `LayoutAnimation.easeInEaseOut` for the page dot's width | carousel scrolls at once; no layout animation |
+| Appearance | `setColorScheme`; colours are tokens, so views repaint with the scheme | n/a |

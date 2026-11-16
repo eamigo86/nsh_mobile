@@ -1,7 +1,8 @@
 // The app's state. Signals stay private; screens read and change them through these functions.
 // Tasks, categories and the name are kept in one `Storage` entry, written after every change.
-import { batch, Keyboard, signal, Storage } from "nsh";
+import { batch, Keyboard, setColorScheme, signal, Storage } from "nsh";
 import {
+  type Appearance,
   type Category,
   type CategoryColor,
   COLORS,
@@ -19,6 +20,7 @@ const tasks = signal<Task[]>([]);
 const categories = signal<Category[]>(SEED_CATEGORIES);
 const name = signal("");
 const onboarded = signal(false);
+const appearance = signal<Appearance>("system");
 const onboardingOpen = signal(false);
 const isLoaded = signal(false);
 const filter = signal<Status>("all");
@@ -40,13 +42,15 @@ let ready: Promise<void> = Storage.getItem(KEY)
       categories.set(saved.categories);
       name.set(saved.name);
       onboarded.set(saved.onboarded);
+      appearance.set(saved.appearance);
       isLoaded.set(true);
     });
+    setColorScheme(saved.appearance);
     loaded = true;
     return persist();
   });
 const persist = () =>
-  Storage.setItem(KEY, JSON.stringify({ tasks: tasks(), categories: categories(), name: name(), onboarded: onboarded() })).catch(() => {});
+  Storage.setItem(KEY, JSON.stringify({ tasks: tasks(), categories: categories(), name: name(), onboarded: onboarded(), appearance: appearance() })).catch(() => {});
 const afterLoad = (change: () => void) => {
   if (loaded) change();
   else ready = ready.then(change);
@@ -79,6 +83,13 @@ export const setTab = (next: Tab) => {
 };
 export const setStatusFilter = (next: Status) => filter.set(next);
 export const setCategoryFilter = (id: string) => categoryFilter.set(id);
+export const appearanceChoice = () => appearance();
+/** System, Light or Dark: applied at once and kept; the next launch applies it after the data loads. */
+export const setAppearance = (next: Appearance) =>
+  commit(() => {
+    appearance.set(next);
+    setColorScheme(next);
+  });
 export const showOnboarding = () => onboardingOpen.set(true);
 /** Skip and Get started: the onboarding is done for good. */
 export const finishOnboarding = () => {
