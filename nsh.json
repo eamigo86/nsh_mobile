@@ -13,6 +13,7 @@
     }
   },
   "capabilities": {
+    "network": { "hosts": ["api.exchange.coinbase.com", "ws-feed.exchange.coinbase.com"] },
     "statusBar": true,
     "picker": true,
     "host": ["location.current"]

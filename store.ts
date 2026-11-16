@@ -33,8 +33,8 @@ const isLoaded = signal(false);
 const filter = signal<Status>("all");
 const categoryFilter = signal("");
 const now = signal(Date.now());
-export type Tab = "home" | "tasks" | "categories" | "settings";
-export const TABS: Tab[] = ["home", "tasks", "categories", "settings"];
+export type Tab = "home" | "tasks" | "categories" | "market" | "settings";
+export const TABS: Tab[] = ["home", "tasks", "categories", "market", "settings"];
 const tab = signal<Tab>("home");
 
 // The crate's `Db`, or undefined where the crate is not part of the runtime (`nativeModule` throws).

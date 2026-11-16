@@ -13,6 +13,7 @@ const PATHS = {
   settings: "M20 7h-9M14 17H5M17 17a3 3 0 1 1-6 0a3 3 0 0 1 6 0zM10 7a3 3 0 1 1-6 0a3 3 0 0 1 6 0z",
   person: "M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2M16 7a4 4 0 1 1-8 0a4 4 0 0 1 8 0z",
   chevron: "m9 18 6-6-6-6",
+  chart: "M3 3v18h18M7 16V11M12 16V7M17 16v-4",
   clock: "M21 12a9 9 0 1 1-18 0a9 9 0 0 1 18 0zM12 7v5l3 2",
 } as const;
 

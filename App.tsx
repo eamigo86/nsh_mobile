@@ -1,4 +1,4 @@
-// The app shell: the four pages behind the tabs, and the deep links that switch them. iOS and Android
+// The app shell: the five pages behind the tabs, and the deep links that switch them. iOS and Android
 // have the system tab bar; the desktops and the web have none, so `Tabs` draws a sidebar (a bottom
 // bar in the web's phone idiom).
 import { mount, platform, signal, Text, UrlScheme, View } from "nsh";
@@ -6,6 +6,7 @@ import { Tab, Tabs } from "nsh/base";
 import { TabBar } from "nsh/mobile";
 import { Categories } from "./pages/Categories";
 import { Home } from "./pages/Home";
+import { Market } from "./pages/Market";
 import { Onboarding } from "./pages/Onboarding";
 import { Settings } from "./pages/Settings";
 import { Tasks } from "./pages/Tasks";
@@ -18,13 +19,14 @@ const ICONS = {
   home: platform.select({ ios: "house", android: "android:ic_menu_today", default: null }),
   tasks: platform.select({ ios: "checkmark.circle", android: "android:ic_menu_agenda", default: null }),
   categories: platform.select({ ios: "list.bullet", android: "android:ic_menu_sort_by_size", default: null }),
+  market: platform.select({ ios: "chart.xyaxis.line", android: "android:ic_menu_view", default: null }),
   settings: platform.select({ ios: "gearshape", android: "android:ic_menu_preferences", default: null }),
 };
-const TITLES: Record<TabName, string> = { home: "Home", tasks: "Tasks", categories: "Categories", settings: "Settings" };
+const TITLES: Record<TabName, string> = { home: "Home", tasks: "Tasks", categories: "Categories", market: "Market", settings: "Settings" };
 
 const NATIVE_BAR = platform.os === "ios" || platform.os === "android";
 const SIDEBAR = platform.desktop;
-const GLYPHS: Record<TabName, IconName> = { home: "home", tasks: "check", categories: "list", settings: "settings" };
+const GLYPHS: Record<TabName, IconName> = { home: "home", tasks: "check", categories: "list", market: "chart", settings: "settings" };
 
 function Nav() {
   return (
@@ -63,6 +65,9 @@ function Shell() {
         </If>
         <If when={currentTab() === "categories"}>
           <Categories />
+        </If>
+        <If when={currentTab() === "market"}>
+          <Market />
         </If>
         <If when={currentTab() === "settings"}>
           <Settings />
