@@ -91,3 +91,14 @@ Out of scope: other symbols or intervals, order books, web and desktop checks.
   overlay, so it re-renders on each move. Ticks are coalesced to one flush per second, so the last price moves once a second, not per tick.
 - Lines per area (new): pure logic 169, feed 93, store 79, chart + gestures 254, page 77; tests 340.
   - Commits: 48a6148 feat(market): add a live BTC-USD candlestick chart; docs commit with this record follows.
+
+## Fix: pinch (device finding, iOS Simulator 26.5)
+
+- Finding: on iOS NSH hands JS one touch only (`responder touches=1`, `raw touches=1` in a two-finger gesture), so the two-touch pinch in the responder never ran.
+- Fix: the native `pinch={{ scale }}` + `onPinchStart`/`onPinchEnd` on the canvas. Live feedback: `transform: [{ scaleX: pinchScale }]` stretches the canvas (axis labels stretch too);
+  the real redraw happens in `onPinchEnd` with `pinchView(start, e.scale, anchor, total)` (new pure function, `zoom` with `pinchFactor(1, scale)`), then `pinchScale.set(1)`.
+  No per-frame value reaches JS, so no live redraw. Anchor = last finger x seen by the responder (the native event has no centre). The pinch cancels the long-press timer and the
+  crosshair, and responder moves are ignored while it is active. The dead two-touch branch is removed (evidence: one touch on iOS; the native pinch covers every platform).
+- TDD: RED `"pinchView" is not exported by "../../market.ts"`, then GREEN. No headless pinch API exists, so only the pure function is tested.
+- `make check`: clean. `make test`: 102 tests: 102 passed, 0 failed. `make ios-crate`: packaged dist/ios-crate-sim/NSH Todo.app. `make package-android`: packaged dist/android/NSH Todo.apk.
+- To check on device: pinch stretches the chart live and snaps to the new zoom on release (direction: spread = fewer candles); no pan or crosshair during a pinch; whether `e.scale` at `onPinchEnd` is the final scale.

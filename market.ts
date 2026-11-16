@@ -116,6 +116,9 @@ export const follow = (view: View, added: number): View => (view.offset > 0 ? { 
 /** The zoom factor of a pinch from the distance between the fingers at its start and now. */
 export const pinchFactor = (start: number, now: number) => (start > 0 && now > 0 ? now / start : 1);
 
+/** The view after a native pinch of `scale` (1 = no change, above 1 = fingers spread = fewer candles) on the view it began with. */
+export const pinchView = (start: View, scale: number, anchor: number, total: number): View => zoom(start, pinchFactor(1, scale), anchor, total);
+
 export interface Press {
   time: number;
   x: number;

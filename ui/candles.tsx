@@ -1,7 +1,8 @@
 // The candlestick chart: one canvas, drawn from the candles and the view, with the gestures on it. Candles of one colour
-// go into one path (two fills, two strokes for the whole chart). Pinch and double tap are computed from raw touches,
-// because the native pinch only drives an animated value and the JS side hears no per-frame scale.
-import { Canvas, type CanvasRenderingContext2D, Path2D, signal, Text, token, View } from "nsh";
+// go into one path (two fills, two strokes for the whole chart). Pinch is the platform's: it drives an animated scale
+// that stretches the canvas while the fingers move, and the real zoom is applied when they lift (the JS side hears no
+// per-frame scale, and iOS gives the responder one touch only). Pan, crosshair and double tap come from the responder.
+import { AnimatedValue, Canvas, type CanvasRenderingContext2D, Path2D, signal, Text, token, View } from "nsh";
 import {
   type Candle,
   formatPrice,
@@ -10,13 +11,12 @@ import {
   isDoubleTap,
   niceTicks,
   pan,
-  pinchFactor,
+  pinchView,
   type Press,
   priceRange,
   priceToY,
   type View as ViewState,
   visibleWindow,
-  zoom,
 } from "../market";
 import { marketCandles, marketView, resetView, setView } from "../market-store";
 
@@ -157,14 +157,16 @@ function draw(cx: CanvasRenderingContext2D, size: { width: number; height: numbe
 /** What a finger is doing: nothing yet, a pan, a pinch or a crosshair drag. */
 type Gesture =
   | { mode: "touch"; x: number; y: number; time: number; timer: ReturnType<typeof setTimeout> }
-  | { mode: "pan" | "cross" }
-  | { mode: "pinch"; distance: number; anchor: number; start: ViewState };
+  | { mode: "pan" | "cross" };
 
 export function CandleChart() {
   let width = 0;
   let gesture: Gesture | null = null;
   let lastTap: Press | null = null;
   let panFrom: { x: number; view: ViewState } | null = null;
+  let lastX = 0; // the last finger position seen by the responder: a pinch anchors there (the native event has no centre)
+  let pinch: { start: ViewState; anchor: number } | null = null;
+  const pinchScale = new AnimatedValue(1);
   const plotW = () => Math.max(1, width - AXIS);
   const finish = () => {
     if (gesture?.mode === "touch") clearTimeout(gesture.timer);
@@ -187,6 +189,7 @@ export function CandleChart() {
           const t = e.touches[0] ?? e;
           const x = t.locationX;
           const y = t.locationY;
+          lastX = x;
           const timer = setTimeout(() => {
             if (gesture?.mode !== "touch") return;
             gesture = { mode: "cross" };
@@ -197,21 +200,10 @@ export function CandleChart() {
         onResponderMove={(e) => {
           const g = gesture;
           if (!g) return;
-          const touches = e.touches;
+          if (pinch) return; // the native pinch owns the fingers until it ends
           const total = marketCandles().length;
-          if (touches.length >= 2) {
-            if (g.mode === "touch") clearTimeout(g.timer);
-            const [a, b] = touches;
-            const distance = Math.hypot(a.pageX - b.pageX, a.pageY - b.pageY);
-            if (g.mode !== "pinch") {
-              const anchor = Math.min(1, Math.max(0, (a.locationX + b.locationX) / 2 / plotW()));
-              gesture = { mode: "pinch", distance, anchor, start: marketView() };
-            } else setView(zoom(g.start, pinchFactor(g.distance, distance), g.anchor, total));
-            cross.set(null);
-            return;
-          }
-          if (g.mode === "pinch") return; // one finger left: wait for the lift
-          const t = touches[0] ?? e;
+          const t = e.touches[0] ?? e;
+          lastX = t.locationX;
           if (g.mode === "cross") return cross.set({ x: t.locationX, y: t.locationY });
           if (g.mode === "touch") {
             if (Math.hypot(t.locationX - g.x, t.locationY - g.y) < MOVE_SLOP) return;
@@ -222,6 +214,20 @@ export function CandleChart() {
           }
           if (panFrom) setView(pan(panFrom.view, (t.locationX - panFrom.x) / (plotW() / panFrom.view.count), total));
         }}
+        pinch={{ scale: pinchScale }}
+        onPinchStart={() => {
+          if (gesture?.mode === "touch") clearTimeout(gesture.timer);
+          gesture = null;
+          panFrom = null;
+          cross.set(null);
+          pinch = { start: marketView(), anchor: Math.min(1, Math.max(0, lastX / plotW())) };
+        }}
+        onPinchEnd={(e) => {
+          if (pinch) setView(pinchView(pinch.start, e.scale, pinch.anchor, marketCandles().length));
+          pinch = null;
+          pinchScale.set(1);
+        }}
+        style={{ transform: [{ scaleX: pinchScale }] }}
         onResponderRelease={() => {
           const g = gesture;
           if (g?.mode === "touch") {

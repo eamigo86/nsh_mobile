@@ -18,6 +18,7 @@ import {
   parseRows,
   parseTick,
   pinchFactor,
+  pinchView,
   priceRange,
   priceToY,
   visibleWindow,
@@ -120,6 +121,14 @@ test("the pinch factor is the ratio of the finger distances", () => {
   expect(pinchFactor(100, 200)).toBe(2);
   expect(pinchFactor(100, 50)).toBe(0.5);
   expect(pinchFactor(0, 50)).toBe(1);
+});
+
+test("a native pinch scale zooms the view it began with: spreading shows fewer candles, pinching more", () => {
+  const v = { count: 60, offset: 0 };
+  expect(pinchView(v, 2, 0.5, 300).count).toBe(30);
+  expect(pinchView(v, 0.5, 0.5, 300).count).toBe(120);
+  expect(pinchView(v, 0, 0.5, 300)).toEqual(v);
+  expect(pinchView(v, 1000, 1, 300).count).toBe(MIN_COUNT);
 });
 
 test("two presses close together in time and place are a double tap", () => {
