@@ -4,6 +4,9 @@
 
 use nsh_core::prelude::*;
 
+mod db;
+pub use db::{CategoryRow, TaskRow};
+use std::sync::Mutex;
 #[cfg(target_os = "ios")]
 mod ios;
 #[cfg(target_os = "ios")]
@@ -16,6 +19,7 @@ mod time;
 #[native_module("nshtodo/native")]
 fn native(registry: &mut Registry) {
     registry.module::<Location>();
+    registry.module::<Db>();
     registry.module::<TimePicker>();
 }
 
@@ -64,5 +68,65 @@ impl Location {
         return ios::current().await;
         #[cfg(not(target_os = "ios"))]
         Err("unavailable".to_owned())
+    }
+}
+
+/// The app's SQLite database, `todo.sqlite` in the app's data directory. The functions are synchronous: each is one
+/// small statement on a local file, so it runs inside the TSX call and returns its value (an `Err` throws), with no task
+/// to start and nothing to await in Rust. `open` comes first, with `process.dataDir`: `data_dir()` reads the reactive
+/// runtime, which is not entered when a promise continuation calls the module (it panics there), so TSX passes the path.
+#[module]
+pub struct Db;
+
+static CONN: Mutex<Option<rusqlite::Connection>> = Mutex::new(None);
+
+/// Runs `f` on the open connection.
+fn with_conn<T>(f: impl FnOnce(&mut rusqlite::Connection) -> Result<T, String>) -> Result<T, String> {
+    let mut guard = CONN.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    f(guard.as_mut().ok_or("the database is not open")?)
+}
+
+#[module]
+impl Db {
+    /// Opens `todo.sqlite` in `dir` (the app's data directory, `process.dataDir`), creating it and its tables; an empty
+    /// `dir` (the web has none) is an error. Opening again keeps the open connection.
+    pub fn open(dir: String) -> Result<(), String> {
+        let mut guard = CONN.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        if guard.is_none() {
+            *guard = Some(db::open_in(&dir)?);
+        }
+        Ok(())
+    }
+    /// 0 until the first `import`, then 1 (`PRAGMA user_version`).
+    pub fn version() -> Result<u32, String> {
+        with_conn(|c| db::version(c))
+    }
+    /// Every category, oldest first.
+    pub fn categories() -> Result<Vec<CategoryRow>, String> {
+        with_conn(|c| db::categories(c))
+    }
+    /// Every task, oldest first.
+    pub fn tasks() -> Result<Vec<TaskRow>, String> {
+        with_conn(|c| db::tasks(c))
+    }
+    /// Adds a task (`id` empty) or updates the one with that id (its `done` stays); returns the id.
+    pub fn save_task(task: TaskRow) -> Result<String, String> {
+        with_conn(|c| db::save_task(c, &task))
+    }
+    /// Marks a task done or open.
+    pub fn set_done(id: String, done: bool) -> Result<(), String> {
+        with_conn(|c| db::set_done(c, &id, done))
+    }
+    /// Deletes a task.
+    pub fn remove_task(id: String) -> Result<(), String> {
+        with_conn(|c| db::remove_task(c, &id))
+    }
+    /// Adds a category and returns it; a name taken in any letter case is refused with the message to show.
+    pub fn add_category(name: String, color: String) -> Result<CategoryRow, String> {
+        with_conn(|c| db::add_category(c, &name, &color))
+    }
+    /// Loads the first snapshot in one transaction while `version` is 0 and makes it 1; false when it was already imported.
+    pub fn import(tasks: Vec<TaskRow>, categories: Vec<CategoryRow>) -> Result<bool, String> {
+        with_conn(|c| db::import(c, &tasks, &categories))
     }
 }
