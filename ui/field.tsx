@@ -77,7 +77,7 @@ export function SelectRow(props: {
       onChange={({ value }) => props.onChange(value ?? "")}
       popupClass="rounded-t-3xl bg-popover p-2 pb-[env(safe-area-inset-bottom)]"
       backdropClass="bg-scrim"
-      itemClass="min-h-12 flex-row items-center rounded-xl px-4 selected:bg-muted"
+      itemClass="min-h-12 flex-row items-center rounded-xl px-4 text-popover-foreground selected:bg-muted"
       itemStyle={{ fontSize: 17 }}
       trigger={
         <View testID={props.testID} class={ROW}>

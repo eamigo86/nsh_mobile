@@ -88,3 +88,10 @@ test("the stored first-launch flag is kept when the onboarding is reopened", asy
   await app.press("id:onboarding-skip");
   expect(saved(app).onboarded).toBe(true);
 });
+
+test("a select's choices use the popover ink, so they read in dark mode", async () => {
+  const app = await launchApp({ colorScheme: "dark" });
+  await app.openWithUrl("nshtodo://tasks");
+  await app.press("id:filter-category");
+  expect(app.spanStyle("text:Personal").color).toBe(DARK_INK);
+});
