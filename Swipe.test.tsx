@@ -1,7 +1,8 @@
 // Swipe actions on Home's "Up next" rows: the snap maths as pure functions, then the gestures and the actions driven like a user.
 import { expect, test } from "nsh/test";
 import type { App } from "nsh/test";
-import { ACTION_WIDTH, settle } from "./ui/swipe";
+import { ACTION_WIDTH, GAP, settle } from "./ui/swipe";
+import theme from "./theme.json";
 import { KEY, launchApp } from "./testing";
 
 const task = (id: string, title: string) => ({ id, title, notes: "", categoryId: "", due: "", time: "", done: false });
@@ -15,14 +16,16 @@ const hidden = (app: App, id: string) => expect(app.enabled(`id:upnext-${id}-del
 const W = 320;
 test("a short drag snaps back, a drag past half an action opens that side", () => {
   expect(settle(0, 10, W)).toEqual({ to: 0 });
-  expect(settle(0, ACTION_WIDTH, W)).toEqual({ to: ACTION_WIDTH });
+  expect(settle(0, ACTION_WIDTH, W)).toEqual({ to: ACTION_WIDTH + GAP });
+  expect(GAP).toBe(12);
   expect(settle(0, -ACTION_WIDTH, W)).toEqual({ to: -2 * ACTION_WIDTH });
 });
 
 test("a drag back past half an action closes an open row, a short one keeps it open", () => {
   expect(settle(-2 * ACTION_WIDTH, 30, W)).toEqual({ to: -2 * ACTION_WIDTH });
   expect(settle(-2 * ACTION_WIDTH, 150, W)).toEqual({ to: 0 });
-  expect(settle(ACTION_WIDTH, -40, W)).toEqual({ to: 0 });
+  expect(settle(ACTION_WIDTH + GAP, -60, W)).toEqual({ to: 0 });
+  expect(settle(ACTION_WIDTH + GAP, -20, W)).toEqual({ to: ACTION_WIDTH + GAP });
 });
 
 test("a drag past 60% of the width performs the outermost action", () => {
@@ -91,4 +94,14 @@ test("a full swipe left deletes, a full swipe right completes", async () => {
   await app.waitUntil(() => saved(app).tasks.length === 1);
   await swipe(app, "2", 0.8 * W);
   await app.waitUntil(() => saved(app).tasks.every((t) => t.done));
+});
+
+// The test API reads no view or canvas colour (only `spanStyle`), so the closest observable is the theme the row paints with.
+test("the swipe actions keep saturated fills and white glyphs in light and dark", () => {
+  const { light, dark } = theme.cssVars as unknown as Record<"light" | "dark", Record<string, string>>;
+  for (const scheme of [light, dark]) expect(scheme["swipe-ink"]).toBe("#ffffff");
+  expect(dark["swipe-complete"]).toBe("#2e9b4f");
+  expect(dark["swipe-edit"]).toBe("#2f7fe0");
+  expect(dark["swipe-delete"]).toBe("#e5484d");
+  expect([light["swipe-complete"], light["swipe-edit"], light["swipe-delete"]]).toEqual([light.up, light["cat-blue"], light.destructive]);
 });

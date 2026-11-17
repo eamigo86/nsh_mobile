@@ -1,5 +1,9 @@
-// The snap maths of a swipe row: where it rests after a drag. Positions are points, right positive.
+// The snap maths of a swipe row: where it rests after a drag. Positions are points, right positive: the row itself
+// moves right (Complete); left, the Edit and Delete actions slide over the row by the same amount.
 export const ACTION_WIDTH = 74;
+/** The card shows between the open Complete action and the row. */
+export const GAP = 12;
+const LEFT_OPEN = ACTION_WIDTH + GAP;
 const RIGHT_OPEN = -2 * ACTION_WIDTH;
 /** Past this share of the row's width, a drag performs the outermost action. */
 const FULL = 0.6;
@@ -11,6 +15,6 @@ export function settle(start: number, dx: number, width: number): { to: number; 
   const pos = start + dx;
   if (pos > FULL * width) return { to: width, full: "complete" };
   if (pos < -FULL * width) return { to: -width, full: "delete" };
-  if (pos > 0) return { to: pos > ACTION_WIDTH / 2 ? ACTION_WIDTH : 0 };
+  if (pos > 0) return { to: pos > ACTION_WIDTH / 2 ? LEFT_OPEN : 0 };
   return { to: pos < -ACTION_WIDTH / 2 ? RIGHT_OPEN : 0 };
 }

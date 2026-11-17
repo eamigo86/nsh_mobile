@@ -27,7 +27,8 @@ export type IconColor =
   | "primary-foreground"
   | "destructive"
   | "on-hero"
-  | "on-color";
+  | "on-color"
+  | "swipe-ink";
 const SIZES = { sm: "size-4", md: "size-5", lg: "size-6" } as const;
 
 export function Icon(props: { name: IconName; color?: IconColor; size?: keyof typeof SIZES }) {
