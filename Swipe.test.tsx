@@ -38,6 +38,12 @@ test("a drag never moves the row past one side's actions beyond the full swipe",
   expect(settle(0, 5 * W, W)).toEqual({ to: W, full: "complete" });
 });
 
+test("before the row's width is known, a drag only opens or closes, never deletes or completes", () => {
+  expect(settle(0, -120, 0)).toEqual({ to: -156 });
+  expect(settle(0, 120, 0)).toEqual({ to: ACTION_WIDTH + GAP });
+  expect(settle(0, -10, 0)).toEqual({ to: 0 });
+});
+
 test("swiping left reveals Edit and Delete, and Delete removes the task", async () => {
   const app = await home();
   await swipe(app, "1", -2 * ACTION_WIDTH);

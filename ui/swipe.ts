@@ -15,8 +15,9 @@ export type SwipeFull = "complete" | "delete";
 /** Where a row dragged by `dx` from rest position `start` settles; `full` when the drag performs an action. */
 export function settle(start: number, dx: number, width: number): { to: number; full?: SwipeFull } {
   const pos = start + dx;
-  if (pos > FULL * width) return { to: width, full: "complete" };
-  if (pos < -FULL * width) return { to: -width, full: "delete" };
+  // Until the row has been laid out its width is 0, and any drag would be "past 60%": never complete or delete then.
+  if (width > 0 && pos > FULL * width) return { to: width, full: "complete" };
+  if (width > 0 && pos < -FULL * width) return { to: -width, full: "delete" };
   if (pos > 0) return { to: pos > ACTION_WIDTH / 2 ? LEFT_OPEN : 0 };
   return { to: pos < -ACTION_WIDTH / 2 ? RIGHT_OPEN : 0 };
 }
