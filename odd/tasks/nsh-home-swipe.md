@@ -164,3 +164,20 @@ Authored lines, final (code + tests, docs excluded):
 - RED: the snap tests with the new left offset failed (`make test`: 115 tests, 113 passed, 2 failed). GREEN: `make check` clean; `make test` 115 passed, 0 failed; `make ios-crate` and `make package-android` packaged.
 - No test API reads a view's translation or radius: the push, radius and spacing are not asserted; device check pending.
 - Commit: 3a857f4.
+
+### Device verification of spec change 2, and a data-loss guard (2026-11-17)
+
+- Incident: the first device check of 3a857f4 on the iOS Simulator deleted "Prepare the sprint demo" after a 120 pt
+  left swipe, which is not a full swipe.
+  - The task was restored straight into `todo.sqlite` with id 2, Work, 2026-11-17 10:00, not done.
+  - The same gesture did not delete again in two later tries, including the first gesture after a relaunch.
+  - Likely cause: `settle()` compares the drag with 60% of `width`, and `width` is 0 until `onLayout` reports it, so any
+    left drag in that window counted as a full swipe.
+- Fix 79f64e9: no complete or delete while `width` is 0.
+  - TDD: RED `expected {"to":-0,"full":"delete"} to equal {"to":-156}`, then GREEN.
+  - `make check` clean; `make test` 116 passed, 0 failed; `make ios-crate` and `make package-android` packaged.
+- Device check of 79f64e9, iOS 26.5 Simulator and Android API 35 emulator (light):
+  - A left swipe pushes the whole row to show rounded Edit and Delete with 8 pt between them.
+  - A right swipe shows a rounded Complete with the 12 pt gap.
+  - A full left swipe deleted only a throwaway task, on both iOS and Android.
+- Test data afterwards: iOS has its 3 tasks (the sprint demo active), Android has none.
