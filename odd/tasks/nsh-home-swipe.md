@@ -181,3 +181,19 @@ Authored lines, final (code + tests, docs excluded):
   - A right swipe shows a rounded Complete with the 12 pt gap.
   - A full left swipe deleted only a throwaway task, on both iOS and Android.
 - Test data afterwards: iOS has its 3 tasks (the sprint demo active), Android has none.
+
+### Final measurement (2026-11-17, standard push + rounded actions)
+
+Same method as the earlier measurement: Pixel 9 Pro XL emulator API 35 at 60 Hz, 2 runs of 10 open/close cycles, with
+SurfaceFlinger latency on the app layer and app CPU from `/proc/<pid>/stat`. Builds: NSH 79f64e9, Exact 0f7ef93.
+
+| Build | Frames / gesture (median) | Interval p50 | p90 | p99 | Janky (>25 ms) | App CPU (one core) |
+|---|---|---|---|---|---|---|
+| NSH final | 34.5 | 21-26 ms | 80-86 ms | 120-140 ms | 45-52% | 29-31% |
+| Exact final | 10-12 | 31-34 ms | 90-103 ms | 135-172 ms | 57-59% | 7-10% |
+
+Reading:
+- NSH presents about 3x more frames per gesture: its native pan follows the finger.
+- Exact uses about 3-4x less app CPU, but presents few frames.
+- The rare 0.4 s stalls seen in NSH's overlay build are gone with the push layout.
+- These are emulator numbers: they compare the two apps, not real devices.
