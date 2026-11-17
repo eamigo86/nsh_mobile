@@ -17,7 +17,7 @@ android {
     }
 }
 
-// The embed libraries come from `make embed-libs` (release v0.5.0 of longbridge/nsh).
+// The embed libraries come from `make embed-libs` (release v0.5.1 of longbridge/nsh).
 val nshLibs = rootProject.file("../libs/android/nsh-embed-android")
 
 dependencies {
