@@ -1,12 +1,14 @@
 // Home: a greeting on the peach hero, today's progress, three glass counters and what is up next.
-import { Scroll, Text, View } from "nsh";
-import { allCategories, allTasks, displayName, today } from "../store";
-import { categoryOf, dueText, greeting, isOverdue, isToday, upNext } from "../domain";
+import { Scroll, signal, Text, View } from "nsh";
+import { allCategories, allTasks, displayName, removeTask, setDone, today } from "../store";
+import { TaskSheet } from "../sheets/TaskSheet";
+import { type Task, categoryOf, dueText, greeting, isOverdue, isToday, upNext } from "../domain";
 import { Avatar } from "../ui/avatar";
 import { Card, ColorDot } from "../ui/card";
 import { Icon, type IconName } from "../ui/icon";
 import { Ring } from "../ui/ring";
 import { glassFallback, glassStyle, heroMesh } from "../ui/surfaces";
+import { SwipeRow } from "../ui/swipe-row";
 import { Title } from "./Title";
 
 export function Home() {
@@ -15,6 +17,7 @@ export function Home() {
   const overdue = () => allTasks().filter((t) => isOverdue(t, today())).length;
   const fraction = () => (todayTasks().length === 0 ? 0 : todayDone() / todayTasks().length);
   const next = () => upNext(allTasks());
+  const editing = signal<Task | null>(null);
 
   return (
     <View class="flex-1">
@@ -51,7 +54,14 @@ export function Home() {
             <Text class="text-lg font-semibold text-card-foreground">Up next</Text>
             <Each of={next()} key={(t) => t.id}>
               {(task) => (
-                <View class="min-h-11 flex-row items-center gap-3" testID={`upnext-${task().id}`}>
+                <SwipeRow
+                  id={task().id}
+                  testID={`upnext-${task().id}`}
+                  onComplete={() => setDone(task().id, true)}
+                  onEdit={() => editing.set(task())}
+                  onDelete={() => removeTask(task().id)}
+                >
+                <View class="min-h-11 flex-row items-center gap-3">
                   <ColorDot color={categoryOf(allCategories(), task().categoryId)?.color ?? null} class="size-2.5" />
                   <View class="flex-1">
                     <Text class="text-base text-card-foreground">{task().title}</Text>
@@ -62,6 +72,7 @@ export function Home() {
                     </If>
                   </View>
                 </View>
+                </SwipeRow>
               )}
             </Each>
             <If when={next().length === 0}>
@@ -70,6 +81,7 @@ export function Home() {
           </Card>
         </View>
       </Scroll>
+      <TaskSheet open={editing() !== null} task={editing()} onClose={() => editing.set(null)} />
     </View>
   );
 }
