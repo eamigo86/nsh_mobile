@@ -96,3 +96,11 @@ Out of scope: swipe actions on the Tasks or Categories screens, undo, web and de
   base is the current value or zero is not documented (`extractOffset` at start was used, as in React Native; untested natively).
 - Platform notes: unverified on devices (the parent checks iOS and Android).
 - Authored lines (git, additions): swipe row component 90, snap maths 16, page (Home) 20 changed, icons 2 (theme: 0, no new tokens: `up`, `destructive`, `cat-blue`, `on-color`), tests 94.
+
+## T2 correction (device finding)
+
+- Finding: in dark mode the actions became pastel with black glyphs (`on-color` and `up`/`destructive`/`cat-blue` flip in dark). User also asked: swipe left overlays Edit/Delete over a fixed row; swipe right keeps the push with a 12 pt card gap after Complete.
+- Fix: new `swipe-ink`/`swipe-complete`/`swipe-edit`/`swipe-delete` tokens (light = old values, dark = #2e9b4f/#2f7fe0/#e5484d, ink white both). `ui/swipe.ts`: `GAP = 12`, right open at 86. `ui/swipe-row.tsx`: one pan value drives the row (right only, interpolate clamp), the trailing action group (left, from off the right edge to 0), a green trail that stops 12 pt short of the row, and a delete cover that sweeps in before a full-swipe delete.
+- RED: the test API reads no view or canvas colour (only `spanStyle`), so the colour test asserts `theme.json` tokens: `expected undefined to be "#ffffff"`; the snap tests failed to build without `GAP` (103 passed, 1 failed).
+- GREEN: `make check` clean; `make test` 115 passed, 0 failed; `make ios-crate` and `make package-android` packaged. Not verified on devices (parent to check): overlay motion, gap, full-swipe cover, dark colours, and that the `deleting() &&` cover mounts reactively.
+- Commit: c0c355c.
