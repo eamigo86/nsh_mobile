@@ -155,3 +155,12 @@ Reading:
 Authored lines, final (code + tests, docs excluded):
 - Exact (`db7da0b..HEAD`): contract +32/-7, theme +6, tests +93. Code 38 lines.
 - NSH (`6922eb1..HEAD`): swipe row 107, snap maths 20, Home +16/-4, theme 8, icons +4/-1, tests 107. Code 155 lines.
+
+## Spec change 2 (2026-11-17, user)
+
+- The left overlay is reverted to the standard push: the row translates with the finger both ways; Edit and Delete sit still at the right, under the row. Kept: 12 pt Complete gap, dark tokens, one open row, press-to-close, full swipe both ways (on a full left swipe the row slides off, then Delete runs).
+- Removed: the green trail, the delete cover and their animated values (only the rounded buttons are coloured; the card shows elsewhere, overshoot included).
+- Actions are `rounded-xl` (12 pt, the radius of the select items), inset 4 pt top and bottom (`inset-y-1`), 74 pt wide; 8 pt between Edit and Delete (`gap-2`). Open offsets: right 74 + 12 = 86, left -(74 + 8 + 74) = -156 (no edge margin).
+- RED: the snap tests with the new left offset failed (`make test`: 115 tests, 113 passed, 2 failed). GREEN: `make check` clean; `make test` 115 passed, 0 failed; `make ios-crate` and `make package-android` packaged.
+- No test API reads a view's translation or radius: the push, radius and spacing are not asserted; device check pending.
+- Commit: 3a857f4.
