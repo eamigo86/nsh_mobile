@@ -40,10 +40,11 @@ export function SwipeRow(props: {
   const finish = (full: SwipeFull) =>
     void (full === "complete" ? moveTo(width).then(props.onComplete) : (deleting.set(true), grow.timing(1, { duration: 160 })).then(props.onDelete));
   // The row follows only right drags; the Edit and Delete group follows left drags, from off the right edge down to rest.
-  const rowX = x.interpolate({ inputRange: [0, 1], outputRange: [0, 1], extrapolateLeft: "clamp" });
+  // NSH's interpolate clamps by default (React Native extends), so the right side extends explicitly.
+  const rowX = x.interpolate({ inputRange: [0, 1], outputRange: [0, 1], extrapolateLeft: "clamp", extrapolateRight: "extend" });
   const actionsX = x.interpolate({ inputRange: [-2 * ACTION_WIDTH, 0], outputRange: [0, 2 * ACTION_WIDTH], extrapolate: "clamp" });
   // Green only up to the open Complete action plus the gap, so the card shows in the gap at rest.
-  const trailX = x.interpolate({ inputRange: [GAP, GAP + 1], outputRange: [0, 1], extrapolateLeft: "clamp" });
+  const trailX = x.interpolate({ inputRange: [GAP, GAP + 1], outputRange: [0, 1], extrapolateLeft: "clamp", extrapolateRight: "extend" });
   const coverX = grow.interpolate({ inputRange: [0, 1], outputRange: [600, 0] });
 
   return (
