@@ -1,10 +1,12 @@
 // The snap maths of a swipe row: where it rests after a drag. Positions are points, right positive: the row itself
-// moves right (Complete); left, the Edit and Delete actions slide over the row by the same amount.
+// moves right (Complete) or left (Edit and Delete), revealing the fixed actions underneath.
 export const ACTION_WIDTH = 74;
 /** The card shows between the open Complete action and the row. */
 export const GAP = 12;
+/** Space between the Edit and Delete actions. */
+const ACTION_GAP = 8;
 const LEFT_OPEN = ACTION_WIDTH + GAP;
-const RIGHT_OPEN = -2 * ACTION_WIDTH;
+const RIGHT_OPEN = -(2 * ACTION_WIDTH + ACTION_GAP);
 /** Past this share of the row's width, a drag performs the outermost action. */
 const FULL = 0.6;
 

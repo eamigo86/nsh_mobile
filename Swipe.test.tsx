@@ -18,12 +18,12 @@ test("a short drag snaps back, a drag past half an action opens that side", () =
   expect(settle(0, 10, W)).toEqual({ to: 0 });
   expect(settle(0, ACTION_WIDTH, W)).toEqual({ to: ACTION_WIDTH + GAP });
   expect(GAP).toBe(12);
-  expect(settle(0, -ACTION_WIDTH, W)).toEqual({ to: -2 * ACTION_WIDTH });
+  expect(settle(0, -ACTION_WIDTH, W)).toEqual({ to: -156 });
 });
 
 test("a drag back past half an action closes an open row, a short one keeps it open", () => {
-  expect(settle(-2 * ACTION_WIDTH, 30, W)).toEqual({ to: -2 * ACTION_WIDTH });
-  expect(settle(-2 * ACTION_WIDTH, 150, W)).toEqual({ to: 0 });
+  expect(settle(-156, 30, W)).toEqual({ to: -156 });
+  expect(settle(-156, 150, W)).toEqual({ to: 0 });
   expect(settle(ACTION_WIDTH + GAP, -60, W)).toEqual({ to: 0 });
   expect(settle(ACTION_WIDTH + GAP, -20, W)).toEqual({ to: ACTION_WIDTH + GAP });
 });
