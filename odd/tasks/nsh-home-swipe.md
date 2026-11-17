@@ -58,7 +58,7 @@ Out of scope: swipe actions on the Tasks or Categories screens, undo, web and de
 
 - [x] T1 Branch and this document. Route: inline (mechanical).
 - [x] T2 Swipe actions on Home's "Up next" rows, tests first. Route: delegated writer (several files: a swipe row, Home, tests).
-- [ ] T3 Verify on the iOS Simulator and the Android emulator (light and dark), then measure. Route: inline per-action.
+- [x] T3 Verify on the iOS Simulator and the Android emulator (light and dark), then measure. Route: inline per-action.
 
 ## Delivery
 
@@ -104,3 +104,54 @@ Out of scope: swipe actions on the Tasks or Categories screens, undo, web and de
 - RED: the test API reads no view or canvas colour (only `spanStyle`), so the colour test asserts `theme.json` tokens: `expected undefined to be "#ffffff"`; the snap tests failed to build without `GAP` (103 passed, 1 failed).
 - GREEN: `make check` clean; `make test` 115 passed, 0 failed; `make ios-crate` and `make package-android` packaged. Not verified on devices (parent to check): overlay motion, gap, full-swipe cover, dark colours, and that the `deleting() &&` cover mounts reactively.
 - Commit: c0c355c.
+
+## Spec change (2026-11-17, user, after the first device check)
+
+- Swipe left: the row content stays in place. Edit and Delete slide in from the right edge OVER the text until fully shown.
+- Swipe right: the row still moves right. A gap of about 12 pt, in the card colour, separates the open Complete action from the dot.
+
+## T3 device verification (2026-11-17)
+
+iPhone 17 Pro Simulator (iOS 26.5, `make ios-crate`) and Pixel 9 Pro XL emulator (API 35, `make package-android`).
+
+- First build (b119e64), iOS and Android:
+  - Snap open, Edit opens the editor, Complete, Delete, one row open at a time, tap-to-close and full-swipe delete all worked.
+  - Dark mode showed pastel actions with black glyphs; fixed in c0c355c.
+  - A transient red sliver appeared from the spring overshoot on close.
+- c0c355c regression, found on the device: a right drag moved the row by only 1 pt and Complete never showed.
+  - Cause: NSH's `interpolate` defaults to `extrapolate: "clamp"`, unlike React Native's `"extend"`
+    (`nsh-js-0.5.1/src/animated.rs`), so the identity mapping `[0,1] -> [0,1]` stopped at 1.
+  - Fixed in 7cfc714 with `extrapolateRight: "extend"` on the row and the green trail.
+  - No RED test is possible: no test API reads a view's translation. `make check` clean; `make test` 115 passed, 0 failed.
+- Final build (7cfc714), checked on iOS (light and dark) and Android (light):
+  - The left overlay keeps the text in place.
+  - The right swipe shows Complete with the 12 pt card-colour gap.
+  - Glyphs are white on saturated colours in dark.
+  - Full-swipe delete with the red cover works (Android).
+- Test data restored: iOS has the sprint demo active, Android has no tasks.
+- Finding for the comparison: `interpolate` clamps by default, a silent difference from the React Native API it mirrors.
+
+### Measurement (Android emulator, Pixel 9 Pro XL API 35, 60 Hz)
+
+Method: 10 cycles per run of a 300 ms swipe-left that opens Edit/Delete, then a 300 ms reverse swipe that closes it
+(`adb shell input swipe`). Frame present times come from `dumpsys SurfaceFlinger --latency` on the app's layer, cleared
+before each gesture and read 1 s after it. App CPU comes from `/proc/<pid>/stat` over the whole loop, settle time
+included. Two runs per build. Emulator numbers compare the two apps; they are not device numbers.
+
+| Build | Frames / gesture (median) | Interval p50 | p90 | p99 | Janky (>25 ms) | App CPU (one core) |
+|---|---|---|---|---|---|---|
+| NSH, first build (row pushed left) | 34-35 | 24 ms | 74-80 ms | 123-144 ms | 48-49% | 29-32% |
+| Exact, first build (row pushed left) | 8-11 | 30-41 ms | ~101 ms | 164-179 ms | 56-66% | 8.5-8.8% |
+| NSH, final (actions overlay the row) | 26.5 | 24 ms | 87-100 ms | 380-422 ms | 48% | 23-26% |
+| Exact, final (actions overlay the row) | 8-11 | 32-33 ms | 90-104 ms | 126-144 ms | 56-60% | 8.4-12.1% |
+
+Reading:
+- NSH follows the finger with about 3x more frames: its native pan drives an animated value on the UI thread. It costs
+  2-3x more app CPU.
+- Exact presents few frames per gesture and uses little CPU.
+- NSH's final build shows rare long stalls (p99 about 0.4 s) that the first build did not have. The cause is not
+  investigated.
+
+Authored lines, final (code + tests, docs excluded):
+- Exact (`db7da0b..HEAD`): contract +32/-7, theme +6, tests +93. Code 38 lines.
+- NSH (`6922eb1..HEAD`): swipe row 107, snap maths 20, Home +16/-4, theme 8, icons +4/-1, tests 107. Code 155 lines.
