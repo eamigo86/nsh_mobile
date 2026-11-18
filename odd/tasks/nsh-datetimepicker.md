@@ -36,7 +36,7 @@ nothing on desktops and the web. It does what the crate's component does, so the
 - [x] T1 Branch and this document. Route: inline (mechanical).
 - [x] T2 iOS "Due time" uses `DateTimePicker`, tests first. Route: delegated writer (TSX control and tests).
 - [x] T3 Remove the crate's time picker. Route: same delegated writer, separate commit (Rust and Cargo files).
-- [ ] T4 Verify on the iOS 26.5 Simulator (picker opens, the pick is saved and shown) and that Android still shows
+- [x] T4 Verify on the iOS 26.5 Simulator (picker opens, the pick is saved and shown) and that Android still shows
   `TimeField`. Route: inline per-action.
 
 ## Acceptance criteria
@@ -70,3 +70,8 @@ nothing on desktops and the web. It does what the crate's component does, so the
   - GREEN: `make check` ok; `make test` 107 tests, 107 passed (114 minus the 7 removed `time` tests); `make ios-crate`
     ok (builds and packages `dist/ios-crate-sim/NSH Todo.app`; only warning is the existing placeholder app id);
     `cargo build --target aarch64-apple-ios-sim` in `rust/` compiles clean.
+- T4 (parent, inline): iOS 26.5 Simulator, `make ios-crate` build of 2e983b9. On a throwaway task (inserted in SQLite,
+  removed after), "Due time" shows the system compact capsule (09:00, system accent, no tint); tapping it opens the
+  24-hour wheels; picking 10:01 updates the capsule, Save stores `time = 10:01` in `todo.sqlite` and the list row shows
+  "Nov 18, 2026 10:01". Android API 35 emulator, `make package-android`: the New Task sheet's "Due time" still shows
+  the TimeField ("09 : 00"); nothing saved. Not checked: a 12-hour device setting, a physical device.
