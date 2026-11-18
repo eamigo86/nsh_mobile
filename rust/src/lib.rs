@@ -9,38 +9,12 @@ pub use db::{CategoryRow, TaskRow};
 use std::sync::Mutex;
 #[cfg(target_os = "ios")]
 mod ios;
-#[cfg(target_os = "ios")]
-mod time_picker;
-// Used by the iOS time picker; the unit tests run everywhere.
-#[cfg_attr(not(any(target_os = "ios", test)), allow(dead_code))]
-mod time;
 
 /// The crate's UI set.
 #[native_module("nshtodo/native")]
 fn native(registry: &mut Registry) {
     registry.module::<Location>();
     registry.module::<Db>();
-    registry.module::<TimePicker>();
-}
-
-/// The native components of the iOS runtime: `nshtodo.timePicker`, the system time picker. Other platforms register
-/// none (`TimePicker.available()` says so, and `ui/time-picker.tsx` falls back to NSH's `TimeField`).
-#[native_components(ios)]
-fn components(components: &nsh_platform_ios::Components) {
-    time_picker::register(components);
-}
-
-/// The system time picker.
-#[module]
-pub struct TimePicker;
-
-#[module]
-impl TimePicker {
-    /// Whether this runtime registered the `nshtodo.timePicker` native component: on iOS, where the app is built with
-    /// this crate.
-    pub fn available() -> bool {
-        cfg!(target_os = "ios")
-    }
 }
 
 /// A device position.
