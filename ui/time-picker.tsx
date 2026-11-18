@@ -1,5 +1,6 @@
-// The "Due time" control: NSH's DateTimePicker on iOS (the system's compact time picker), NSH's TimeField everywhere
-// else. DateTimePicker has no tint prop, so the iOS picker draws in the system's accent.
+// The "Due time" control: NSH's DateTimePicker on iOS and Android (the system's compact time picker, the system's time
+// dialog), NSH's TimeField on desktops and the web, where DateTimePicker shows nothing. It has no tint prop, so the
+// pickers draw in the system's accent.
 import { platform } from "nsh";
 import { DateTimePicker } from "nsh/mobile";
 import { TimeField } from "nsh/base";
@@ -8,7 +9,7 @@ import { TimeField } from "nsh/base";
 export function TimePicker(props: { value: string; onChange: (value: string) => void }) {
   return (
     <If
-      when={platform.os === "ios"}
+      when={platform.os === "ios" || platform.os === "android"}
       else={
         <TimeField
           accessibilityLabel="Due time"

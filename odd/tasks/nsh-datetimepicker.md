@@ -18,8 +18,9 @@ nothing on desktops and the web. It does what the crate's component does, so the
   `accessibilityLabel="Due time"`); every other platform keeps NSH's `TimeField`, as today.
 - Remove the now unused crate picker: `nshtodo.timePicker`, `TimePicker.available()`, `rust/src/time_picker.rs`,
   `rust/src/time.rs` and the dependencies only they use.
-- Out of scope: Android (keeps `TimeField`; switching it to the system dialog is a separate decision), the due date
-  (`DatePicker`).
+- Android too (added 2026-11-18 at the user's request, T5): `DateTimePicker` (the system time dialog) on iOS and
+  Android; desktops and the web keep `TimeField` (`DateTimePicker` shows nothing there).
+- Out of scope: the due date (`DatePicker`).
 
 ## Constraints
 
@@ -38,11 +39,14 @@ nothing on desktops and the web. It does what the crate's component does, so the
 - [x] T3 Remove the crate's time picker. Route: same delegated writer, separate commit (Rust and Cargo files).
 - [x] T4 Verify on the iOS 26.5 Simulator (picker opens, the pick is saved and shown) and that Android still shows
   `TimeField`. Route: inline per-action.
+- [x] T5 Android "Due time" uses `DateTimePicker` too, tests first; desktops and the web keep `TimeField`. Route: inline
+  (one condition and its tests). Verify on the API 35 emulator.
 
 ## Acceptance criteria
 
 - `make check` and `make test` pass.
-- On the iOS Simulator the due time is the system compact picker and a pick reaches the saved task; Android unchanged.
+- On the iOS Simulator and the Android emulator the due time is the system picker and a pick reaches the saved task;
+  desktops and the web keep `TimeField`.
 
 ## Progress / evidence
 
@@ -75,3 +79,14 @@ nothing on desktops and the web. It does what the crate's component does, so the
   24-hour wheels; picking 10:01 updates the capsule, Save stores `time = 10:01` in `todo.sqlite` and the list row shows
   "Nov 18, 2026 10:01". Android API 35 emulator, `make package-android`: the New Task sheet's "Due time" still shows
   the TimeField ("09 : 00"); nothing saved. Not checked: a 12-hour device setting, a physical device.
+- T5 (parent, inline, strict TDD): `TimePicker.test.tsx` runs the native-picker test for `ios` and `android` and adds
+  a desktop (`macos`) test that keeps the TimeField.
+  - RED: `nsh test TimePicker.test.tsx` 3 tests, 2 passed, 1 failed: `on android the due time is the native
+    DateTimePicker, not the TimeField` (`expected true to be false`, the TimeField still shown). The desktop test passed
+    from the start (it guards the fallback).
+  - GREEN: `ui/time-picker.tsx` condition `platform.os === "ios" || platform.os === "android"`; 3/3; `make check` ok;
+    `make test` 108/108.
+  - Device: API 35 emulator, `make package-android`. "Due time" shows the system field ("9:00 AM", the emulator's
+    12-hour format); it opens the system clock dialog; picking 3:15 PM shows "3:15 PM" and, saved, the list row shows
+    "Nov 19, 2026 15:15", so the value stays 24-hour "HH:MM" under a 12-hour device setting. The throwaway task was
+    deleted afterwards.
