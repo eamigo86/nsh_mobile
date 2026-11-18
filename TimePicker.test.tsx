@@ -15,8 +15,12 @@ async function openDueTime(app: App) {
   await app.openWithUrl("nshtodo://tasks");
   await app.press("id:add-task");
   await app.waitFor("id:form-title");
-  await app.press("id:form-due");
-  await app.press("20");
+  // "Add date" on iOS and Android, the calendar on a desktop.
+  if (app.shows("id:form-add-date")) await app.press("id:form-add-date");
+  else {
+    await app.press("id:form-due");
+    await app.press("20");
+  }
   await app.press("id:form-add-time");
 }
 

@@ -1,8 +1,11 @@
 // Form controls: a text field, a select row and a date row, all on the same rounded surface.
 import { Text, View } from "nsh";
 import { type CalendarEntry, DatePicker, Input, Select } from "nsh/base";
+import { DateTimePicker } from "nsh/mobile";
 import { MONTH_NAMES } from "../domain";
+import { TextButton } from "./button";
 import { Icon } from "./icon";
+import { hasNativePicker } from "./time-picker";
 
 const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 // The calendar draws numbers for weekdays and months; the app says them in words.
@@ -91,9 +94,15 @@ export function SelectRow(props: {
   );
 }
 
-/** A labelled row that opens a calendar; `value` is `YYYY-MM-DD` or empty. */
-export function DateRow(props: { label: string; value: string; text: string; onChange: (value: string) => void; testID?: string }) {
+/**
+ * A labelled row for a day; `value` is `YYYY-MM-DD` or empty. Desktops and the web open a calendar. iOS and Android use
+ * the system picker, which with no value would show today and hide that there is none, so an empty row offers "Add date".
+ */
+export function DateRow(props: { label: string; value: string; text: string; today: string; onChange: (value: string) => void; testID?: string }) {
   return (
+    <If
+      when={hasNativePicker()}
+      else={
     <DatePicker
       accessibilityLabel={props.label}
       value={props.value === "" ? null : props.value}
@@ -112,5 +121,23 @@ export function DateRow(props: { label: string; value: string; text: string; onC
         </View>
       }
     />
+      }
+    >
+      <View testID={props.testID} class={ROW}>
+        <Text class="text-base text-card-foreground">{props.label}</Text>
+        <If
+          when={props.value !== ""}
+          else={<TextButton testID="form-add-date" label="Add date" onPress={() => props.onChange(props.today)} />}
+        >
+          <DateTimePicker
+            mode="date"
+            testID="form-due-native"
+            accessibilityLabel={props.label}
+            value={props.value}
+            onChange={({ value }) => props.onChange(value)}
+          />
+        </If>
+      </View>
+    </If>
   );
 }

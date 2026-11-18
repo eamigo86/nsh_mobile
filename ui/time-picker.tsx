@@ -5,11 +5,14 @@ import { platform } from "nsh";
 import { DateTimePicker } from "nsh/mobile";
 import { TimeField } from "nsh/base";
 
+/** True where NSH's DateTimePicker draws something (the system pickers); desktops and the web have none. */
+export const hasNativePicker = () => platform.os === "ios" || platform.os === "android";
+
 /** `value` and what `onChange` gets are "HH:MM", 24-hour. */
 export function TimePicker(props: { value: string; onChange: (value: string) => void }) {
   return (
     <If
-      when={platform.os === "ios" || platform.os === "android"}
+      when={hasNativePicker()}
       else={
         <TimeField
           accessibilityLabel="Due time"

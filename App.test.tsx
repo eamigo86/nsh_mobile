@@ -9,6 +9,10 @@ import { KEY, launchApp, RETURNING } from "./testing";
 const launch = (storage?: Record<string, string>) =>
   launchApp({ clock: { time: new Date(2026, 2, 15, 12, 0, 0) }, storage: storage ?? RETURNING });
 
+// Tests that pick a given day use the calendar, which iOS and Android (the headless default is iOS) replace with the
+// system picker (see DueDate.test.tsx); they run as a desktop.
+const launchDesktop = () => launchApp({ clock: { time: new Date(2026, 2, 15, 12, 0, 0) }, platform: "macos" });
+
 type Saved = {
   tasks: { id: string; title: string; notes: string; categoryId: string; due: string; time: string; done: boolean }[];
   categories: { id: string; name: string; color: string }[];
@@ -24,7 +28,7 @@ async function addTask(app: App, title: string, opts: { category?: string; day?:
   await app.type("id:form-title", title);
   if (opts.category) {
     await app.press("id:form-category");
-    await app.press(opts.category);
+    await app.press(`role:option[${opts.category}]`);
   }
   if (opts.day) {
     await app.press("id:form-due");
@@ -101,7 +105,7 @@ test("a task is toggled done and deleted", async () => {
 });
 
 test("a task is edited through its sheet", async () => {
-  const app = await launch();
+  const app = await launchDesktop();
   await tab(app, "tasks");
   await addTask(app, "Call Ann");
   await app.press("id:open-1");
@@ -118,7 +122,7 @@ test("a task is edited through its sheet", async () => {
 });
 
 test("filters narrow the list by status and category", async () => {
-  const app = await launch();
+  const app = await launchDesktop();
   await tab(app, "tasks");
   await addTask(app, "Late", { category: "Home", day: "10" });
   await addTask(app, "Now", { category: "Work", day: "15" });
@@ -166,7 +170,7 @@ test("a category is added with a count, a duplicate refused", async () => {
 });
 
 test("the settings name greets on Home, and Home counts", async () => {
-  const app = await launch();
+  const app = await launchDesktop();
   expect(app.shows("id:greeting >> text:Hello")).toBe(true);
   await tab(app, "settings");
   await app.type("id:settings-name", "Ada");

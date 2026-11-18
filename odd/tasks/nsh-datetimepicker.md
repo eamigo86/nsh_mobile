@@ -20,7 +20,10 @@ nothing on desktops and the web. It does what the crate's component does, so the
   `rust/src/time.rs` and the dependencies only they use.
 - Android too (added 2026-11-18 at the user's request, T5): `DateTimePicker` (the system time dialog) on iOS and
   Android; desktops and the web keep `TimeField` (`DateTimePicker` shows nothing there).
-- Out of scope: the due date (`DatePicker`).
+- The due date too (added 2026-11-18 at the user's request, T6): on iOS and Android the "Due date" row uses
+  `DateTimePicker` (`mode="date"`, `"YYYY-MM-DD"`); with no due date it shows an "Add date" button that sets today,
+  as "Add time" does for the time (a native picker with no value would show today and hide that there is no date).
+  Desktops and the web keep NSH's `DatePicker` calendar.
 
 ## Constraints
 
@@ -41,6 +44,9 @@ nothing on desktops and the web. It does what the crate's component does, so the
   `TimeField`. Route: inline per-action.
 - [x] T5 Android "Due time" uses `DateTimePicker` too, tests first; desktops and the web keep `TimeField`. Route: inline
   (one condition and its tests). Verify on the API 35 emulator.
+- [x] T6 iOS and Android "Due date" uses `DateTimePicker` (`mode="date"`) with an "Add date" button when empty, tests
+  first; desktops and the web keep the `DatePicker` calendar. Route: delegated writer (`ui/field.tsx`, the task sheet,
+  several test files). Verify on the iOS Simulator and the API 35 emulator (parent).
 
 ## Acceptance criteria
 
@@ -90,3 +96,24 @@ nothing on desktops and the web. It does what the crate's component does, so the
     12-hour format); it opens the system clock dialog; picking 3:15 PM shows "3:15 PM" and, saved, the list row shows
     "Nov 19, 2026 15:15", so the value stays 24-hour "HH:MM" under a 12-hour device setting. The throwaway task was
     deleted afterwards.
+- T6 (delegated writer, strict TDD): `ui/field.tsx` `DateRow` shows `DateTimePicker` (`mode="date"`, `testID="form-due-native"`,
+  `accessibilityLabel` = the row label) in a row like "Due time" on iOS and Android (`hasNativePicker()`, exported from
+  `ui/time-picker.tsx` and reused there), with an "Add date" `TextButton` (`testID="form-add-date"`) that sets today
+  (`today()` from `store.ts`, passed as a `today` prop from `sheets/TaskSheet.tsx`) while the date is empty. Desktops and
+  the web keep the `DatePicker` calendar unchanged. New `DueDate.test.tsx` (5 tests).
+  - Headless default platform: `ios` (an `open()` without `platform`).
+  - RED (`nsh test DueDate.test.tsx`, 5 tests, 1 passed, 4 failed): `on ios`/`on android` "empty due date shows Add
+    date" (`expected false to be true`) and "Add date sets today and the task is saved" (`no pressable view matches
+    id:form-add-date`); the macOS calendar test passed from the start (guards the fallback). After implementing, 2 of
+    the 4 still failed because my test pressed `id:form-due`, which is not pressable on mobile (the row is not a
+    trigger there); that step became `shows("id:form-due")`.
+  - Adapted tests: `App.test.tsx`: the 3 tests that pick a given day (`a task is edited through its sheet`, `filters
+    narrow...`, `the settings name greets...`) now launch with `platform: "macos"` (`launchDesktop`), same assertions;
+    on macOS the tab bar's "Home" text collides with the category "Home", so `addTask` presses the category as
+    `role:option[<name>]` (same intent, as the filter test already does). `TimePicker.test.tsx` `openDueTime` presses
+    `id:form-add-date` when shown (iOS, Android) else picks day 20 on the calendar (macOS); its assertions are unchanged.
+  - GREEN: `make check` ok; `make test` 113 tests, 113 passed; `make ios-crate` ok; `make package-android` ok.
+  - Not verifiable headless: `DateTimePicker`'s `onChange` (picking another date) and the native look; device
+    verification (iOS Simulator, API 35 emulator) is the parent's.
+  - Files: `ui/field.tsx`, `ui/time-picker.tsx`, `sheets/TaskSheet.tsx`, `DueDate.test.tsx`, `App.test.tsx`,
+    `TimePicker.test.tsx`, this document. Commit: see `git log` (feat(tasks): use NSH's DateTimePicker for the due date).
