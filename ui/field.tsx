@@ -103,24 +103,24 @@ export function DateRow(props: { label: string; value: string; text: string; tod
     <If
       when={hasNativePicker()}
       else={
-    <DatePicker
-      accessibilityLabel={props.label}
-      value={props.value === "" ? null : props.value}
-      onChange={({ value }) => props.onChange(typeof value === "string" ? value.slice(0, 10) : "")}
-      popupClass="rounded-t-3xl bg-popover p-4 pb-[env(safe-area-inset-bottom)]"
-      backdropClass="bg-scrim"
-      itemClass="group size-10 items-center justify-center rounded-full selected:bg-primary data-today:border data-today:border-primary"
-      renderItem={(e) => <Text class="text-base text-popover-foreground group-selected:text-primary-foreground">{calendarLabel(e)}</Text>}
-      trigger={
-        <View testID={props.testID} class={ROW}>
-          <Text class="text-base text-card-foreground">{props.label}</Text>
-          <View class="flex-row items-center gap-2">
-            <Text class={`text-base ${props.value === "" ? "text-muted-foreground" : "text-primary"}`}>{props.text}</Text>
-            <Icon name="calendar" size="sm" color="muted-foreground" />
-          </View>
-        </View>
-      }
-    />
+        <DatePicker
+          accessibilityLabel={props.label}
+          value={props.value === "" ? null : props.value}
+          onChange={({ value }) => props.onChange(typeof value === "string" ? value.slice(0, 10) : "")}
+          popupClass="rounded-t-3xl bg-popover p-4 pb-[env(safe-area-inset-bottom)]"
+          backdropClass="bg-scrim"
+          itemClass="group size-10 items-center justify-center rounded-full selected:bg-primary data-today:border data-today:border-primary"
+          renderItem={(e) => <Text class="text-base text-popover-foreground group-selected:text-primary-foreground">{calendarLabel(e)}</Text>}
+          trigger={
+            <View testID={props.testID} class={ROW}>
+              <Text class="text-base text-card-foreground">{props.label}</Text>
+              <View class="flex-row items-center gap-2">
+                <Text class={`text-base ${props.value === "" ? "text-muted-foreground" : "text-primary"}`}>{props.text}</Text>
+                <Icon name="calendar" size="sm" color="muted-foreground" />
+              </View>
+            </View>
+          }
+        />
       }
     >
       <View testID={props.testID} class={ROW}>
