@@ -117,3 +117,13 @@ nothing on desktops and the web. It does what the crate's component does, so the
     verification (iOS Simulator, API 35 emulator) is the parent's.
   - Files: `ui/field.tsx`, `ui/time-picker.tsx`, `sheets/TaskSheet.tsx`, `DueDate.test.tsx`, `App.test.tsx`,
     `TimePicker.test.tsx`, this document. Commit: see `git log` (feat(tasks): use NSH's DateTimePicker for the due date).
+- T6 device checks (parent, inline), builds of 09804ad:
+  - iOS 26.5 Simulator: the New Task sheet shows "Due date: Add date" and no time row; "Add date" shows the compact
+    capsule with today ("Nov 18, 2026") plus the "Due time" row and "Remove Due Date"; the capsule opens the system
+    calendar; picking the 25th updates it and Save stores `due = 2026-11-25`. Editing that task shows the picker at
+    once, and "Remove Due Date" brings "Add date" back. The throwaway task was deleted afterwards.
+  - Android API 35 emulator: "Add date" shows the system field with today; it opens the system date dialog; picking
+    the 26th and Save shows "Nov 26, 2026" in the list. The throwaway task was deleted afterwards.
+  - Seen, not fixed (NSH): on iOS the capsule of an existing task first shows the short format "11/25/26", while a
+    picked date shows "Nov 25, 2026"; the picker's width at first layout seems to decide the style.
+  - Follow-up commit 1026587 (style): re-indented the `DatePicker` fallback in `ui/field.tsx` (no behaviour change).
