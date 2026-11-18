@@ -120,7 +120,7 @@ ios-crate: ## Package the iOS Simulator .app with the Rust crate (CoreLocation, 
 	nsh package --target ios-simulator --out $(CRATE_OUT)
 
 # The C dependencies are built with the current SDK, which needs iOS 13+ for ___chkstk_darwin; rustc's device default is 10.0.
-ios-crate-device: export IPHONEOS_DEPLOYMENT_TARGET ?= 15.0
+package-ios ios-crate-device: export IPHONEOS_DEPLOYMENT_TARGET ?= 15.0
 ios-crate-device: ## Package the unsigned iOS device .app with the Rust crate (SIGN=... PROFILE=... for an .ipa)
 	nsh package --target ios --out $(OUT)/ios-crate $(if $(SIGN),--sign "$(SIGN)") $(if $(PROFILE),--profile "$(PROFILE)")
 
