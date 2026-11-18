@@ -1,8 +1,8 @@
-// The task form's "Due time": the system time picker where the app's Rust crate provides it (iOS, packaged),
-// NSH's TimeField everywhere else. The headless runner has no native components, so the crate's
-// `TimePicker.available` is stood in to take the native branch: the component is then an empty view of no size
-// (nothing to find or press) and cannot emit `change`. That branch is seen as the TimeField's segments ("09") being
-// absent; the native -> form value wiring is verified on a simulator, not here.
+// The task form's "Due time": NSH's DateTimePicker on iOS, NSH's TimeField everywhere else. The headless runner
+// draws no native controls and has no driver for the picker's change, so what is observable is which control the
+// form shows (the TimeField's segments, "09", are present or absent; the native picker itself has no text and is
+// not found by `id:form-time-native` headless); a pick reaching the saved task is verified on
+// a simulator, not here.
 import { expect, test } from "nsh/test";
 import type { App } from "nsh/test";
 import { launchApp } from "./testing";
@@ -27,23 +27,10 @@ test("on Android the due time is NSH's TimeField", async () => {
   expect(app.texts()).toContain("09");
 });
 
-test("on iOS without the crate's picker (headless, a dev host) the TimeField stays", async () => {
+test("on iOS the due time is the native DateTimePicker, not the TimeField", async () => {
   const app = await launch({ platform: "ios" });
   await openDueTime(app);
-  expect(app.shows("id:form-time")).toBe(true);
-  expect(app.texts()).toContain("09");
-});
-
-test("a crate that says its picker is unavailable keeps the TimeField", async () => {
-  const app = await launch({ platform: "ios", modules: { "nshtodo/native": { "TimePicker.available": false } } });
-  await openDueTime(app);
-  expect(app.texts()).toContain("09");
-});
-
-test("where the crate provides the picker the TimeField is replaced by the native component", async () => {
-  const app = await launch({ platform: "ios", modules: { "nshtodo/native": { "TimePicker.available": true } } });
-  await openDueTime(app);
   expect(app.texts()).toContain("Due time");
+  expect(app.shows("id:form-time")).toBe(false);
   expect(app.texts()).not.toContain("09");
-  expect(app.texts()).not.toContain(":");
 });

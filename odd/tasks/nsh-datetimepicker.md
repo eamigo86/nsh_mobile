@@ -1,0 +1,63 @@
+# Feature: nsh-datetimepicker
+
+Locator: `odd/tasks/nsh-datetimepicker.md` · Engram mirror: `odd/nsh-datetimepicker/tasks`
+
+## Objective
+
+On iOS, the task form's "Due time" uses NSH 0.6.0's `DateTimePicker` (`nsh/mobile`, `mode="time"`) instead of the
+`UIDatePicker` component this app's Rust crate registers (`nshtodo.timePicker`, see `native-time-picker.md`).
+
+## Why
+
+NSH 0.6.0 ships the system date and time picker (#2278): on iOS a compact `UIDatePicker`, on Android the system dialog,
+nothing on desktops and the web. It does what the crate's component does, so the crate code can go.
+
+## Scope
+
+- `ui/time-picker.tsx`: iOS shows `DateTimePicker` (`mode="time"`, `value` and `onChange` as `"HH:MM"`,
+  `accessibilityLabel="Due time"`); every other platform keeps NSH's `TimeField`, as today.
+- Remove the now unused crate picker: `nshtodo.timePicker`, `TimePicker.available()`, `rust/src/time_picker.rs`,
+  `rust/src/time.rs` and the dependencies only they use.
+- Out of scope: Android (keeps `TimeField`; switching it to the system dialog is a separate decision), the due date
+  (`DatePicker`).
+
+## Constraints
+
+- Branch `feat/nsh-datetimepicker` from `chore/nsh-0.6.0` (edca1a7). NSH 0.6.0.
+- The uncommitted `package-ios` line in the Makefile stays out of every commit.
+- Known difference: `DateTimePicker` has no tint prop; the crate's picker drew its time in the theme's primary colour.
+
+## TDD
+
+- Mode: strict (user global instructions). Runner: `make test` (TSX tests plus the crate's `cargo test`), `make check`.
+
+## Tasks
+
+- [x] T1 Branch and this document. Route: inline (mechanical).
+- [x] T2 iOS "Due time" uses `DateTimePicker`, tests first. Route: delegated writer (TSX control and tests).
+- [ ] T3 Remove the crate's time picker. Route: same delegated writer, separate commit (Rust and Cargo files).
+- [ ] T4 Verify on the iOS 26.5 Simulator (picker opens, the pick is saved and shown) and that Android still shows
+  `TimeField`. Route: inline per-action.
+
+## Acceptance criteria
+
+- `make check` and `make test` pass.
+- On the iOS Simulator the due time is the system compact picker and a pick reaches the saved task; Android unchanged.
+
+## Progress / evidence
+
+- 2026-11-18: branch created from `chore/nsh-0.6.0` at edca1a7.
+- T2 (delegated writer): `ui/time-picker.tsx` now renders `DateTimePicker` (`mode="time"`, `testID="form-time-native"`,
+  `accessibilityLabel="Due time"`) when `platform.os === "ios"` (the `platform` export of `nsh`), else the unchanged
+  `TimeField`. The tint is dropped (no prop; the picker uses the system accent). The crate's `TimePicker.available`
+  stub tests are gone; `TimePicker.test.tsx` has two tests (Android keeps the TimeField; iOS shows no TimeField
+  segments, "Due time" label present).
+  - RED: `make test` 114 tests, 113 passed, 1 failed: `TimePicker.test.tsx > on iOS the due time is the native
+    DateTimePicker, not the TimeField` (`expected false to be true` for `shows("id:form-time-native")`; the screen still
+    showed "09", ":", "00"). After the implementation the same assertion still failed: headless draws no native control,
+    so `id:form-time-native` is not findable. That assertion was removed (not observable headless); the rest of the
+    test failed RED first on the TimeField segments.
+  - GREEN: `make check` ok; `make test` 114 tests, 114 passed; `make ios-crate` ok.
+  - Headless limits: `DateTimePicker` renders nothing findable or readable and there is no `app.*` driver to change it,
+    so a pick reaching the form or the saved task is verified on the simulator (T4), not here.
+  - Files: `ui/time-picker.tsx`, `TimePicker.test.tsx`, this document.
