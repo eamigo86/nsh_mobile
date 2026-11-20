@@ -7,7 +7,7 @@ NSH_HOME     ?= $(HOME)/.nsh
 ANDROID_HOME ?= $(HOME)/Library/Android/sdk
 AVD          ?= $(shell "$(ANDROID_HOME)/emulator/emulator" -list-avds 2>/dev/null | head -1)
 OUT          ?= dist
-NSH_TAG      ?= v0.6.0
+NSH_TAG      ?= v0.6.1
 LIBS         ?= native/libs
 IOS_HOST     ?= native/ios
 IOS_DERIVED  ?= $(IOS_HOST)/build
@@ -119,8 +119,6 @@ android-host-run: ## Install and launch the Android host on the running emulator
 ios-crate: ## Package the iOS Simulator .app with the Rust crate (CoreLocation, no Xcode project)
 	nsh package --target ios-simulator --out $(CRATE_OUT)
 
-# The C dependencies are built with the current SDK, which needs iOS 13+ for ___chkstk_darwin; rustc's device default is 10.0.
-package-ios ios-crate-device: export IPHONEOS_DEPLOYMENT_TARGET ?= 15.0
 ios-crate-device: ## Package the unsigned iOS device .app with the Rust crate (SIGN=... PROFILE=... for an .ipa)
 	nsh package --target ios --out $(OUT)/ios-crate $(if $(SIGN),--sign "$(SIGN)") $(if $(PROFILE),--profile "$(PROFILE)")
 
