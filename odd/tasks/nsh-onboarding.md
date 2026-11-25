@@ -43,7 +43,7 @@ quality, lines of code, difficulty and limitations (2026-11-16 request).
 
 ## Tasks
 
-- [x] T1 Branch `feat/nsh-onboarding` from `feat/native-time-picker` (d30e022); this document. Route: inline (mechanical).
+- [x] T1 Branch `feat/nsh-onboarding` from `feat/native-time-picker` (c36e4f1); this document. Route: inline (mechanical).
 - [x] T2 Brand: logo and icon assets, app icon in `nsh.json`; record the native launch on each platform. Route: delegated writer (T2-T4, one writer, trigger: 2+ non-trivial files).
 - [x] T3 Animated in-app splash and the 4-step onboarding, tests first. Route: delegated writer.
 - [x] T4 Settings: "Show onboarding again" and Appearance (System/Light/Dark, persisted, applied at launch), tests first. Route: delegated writer.
@@ -65,10 +65,10 @@ quality, lines of code, difficulty and limitations (2026-11-16 request).
 
 ## Progress / evidence
 
-- T1: branch created from d30e022.
-- T2 (98f52e3): `icon` set to `assets/brand/icon-1024.png` (1024x1024); the masters are in `assets/brand/`. No behaviour to test (config only). `make check`: pass.
-- T3 (460ff70): RED first: `make test` after writing `Onboarding.test.tsx`: 9 of the 10 new tests failed (`no view matches id:onboarding-steps`, `expected false to be true` on `id:splash`, `expected undefined to be false` for `parseSaved(...).onboarded`; the tenth, an old save counts as onboarded, passed because nothing existed yet). Then 32 existing tests failed after the implementation (they open the app with empty storage and now meet the splash), so fixtures were adapted (below). GREEN: `make test`: 42 passed, 0 failed. `make check`: pass.
-- T4 (fdbce28): RED first: `Appearance.test.tsx` 8 of 8 failed (`no pressable view matches id:appearance-dark`, `id:onboarding-again`; `expected undefined to be "system"`). GREEN: `make test`: 51 passed, 0 failed (22 s). `make check`: pass.
+- T1: branch created from c36e4f1.
+- T2 (49e5881): `icon` set to `assets/brand/icon-1024.png` (1024x1024); the masters are in `assets/brand/`. No behaviour to test (config only). `make check`: pass.
+- T3 (0fe5161): RED first: `make test` after writing `Onboarding.test.tsx`: 9 of the 10 new tests failed (`no view matches id:onboarding-steps`, `expected false to be true` on `id:splash`, `expected undefined to be false` for `parseSaved(...).onboarded`; the tenth, an old save counts as onboarded, passed because nothing existed yet). Then 32 existing tests failed after the implementation (they open the app with empty storage and now meet the splash), so fixtures were adapted (below). GREEN: `make test`: 42 passed, 0 failed. `make check`: pass.
+- T4 (687f0f5): RED first: `Appearance.test.tsx` 8 of 8 failed (`no pressable view matches id:appearance-dark`, `id:onboarding-again`; `expected undefined to be "system"`). GREEN: `make test`: 51 passed, 0 failed (22 s). `make check`: pass.
 - Test fixtures: `testing.ts` (`launchApp`) opens the app as a returning user (`{"onboarded":true}` in storage) with `reducedMotion`, waits for `id:splash` to be gone; `App.test.tsx`, `Location.test.tsx`, `TimePicker.test.tsx` now use it (about 20 changed lines in total). Test files keep their own scenarios.
 - Storage decision: the two new values live in the existing `exact-todo` blob (`onboarded`, `appearance`) rather than separate keys: one read at launch (the splash already waits for it), one write path (`commit`), and `parseSaved` is the single place that defaults them. Old blobs (no `onboarded`) load as onboarded, so existing users do not get the onboarding; no blob (fresh install) is a first launch; an unknown `appearance` is `system`.
 - Packaging (no install, no device): `make ios-crate`: built and packaged `dist/ios-crate-sim/NSH Todo.app` (about 40 s incl. the crate; Info.plist has the icon entries `AppIcon`, `Assets.car`, and `UILaunchScreen` as an empty dict). `make package-android`: built `dist/android/NSH Todo.apk` (82.5 MB; it contains `res/mipmap-xxxhdpi-v4/ic_launcher.png` and the six SVGs under `assets/nsh/assets/assets/brand/`); it exceeded 2 minutes the first time (cold Rust build for the Android targets), exit 0. `dist/` is not tracked.

@@ -27,7 +27,7 @@ the database lives in the app's Rust crate (`rusqlite`, bundled SQLite) and TSX 
 
 ## Constraints
 
-- Branch `feat/nsh-sqlite` from `feat/nsh-avatar` (552c295). NSH 0.5.0 (f4d68f7); `rusqlite` with the `bundled`
+- Branch `feat/nsh-sqlite` from `feat/nsh-avatar` (71be20c). NSH 0.5.0 (f4d68f7); `rusqlite` with the `bundled`
   feature (0.41.x or 0.42.x is in the local cargo registry).
 - Keep `make check` and `make test` green; `make ios-crate` and `make package-android` must build.
 - Artifacts in English. Conventional commits, no attribution lines, no push.
@@ -57,8 +57,8 @@ the database lives in the app's Rust crate (`rusqlite`, bundled SQLite) and TSX 
 
 ## Progress / evidence
 
-- T1: branch created from 552c295.
-- T2 (delegated writer), commit cedd9dc `feat(storage): keep tasks and categories in SQLite through the Rust crate`:
+- T1: branch created from 71be20c.
+- T2 (delegated writer), commit f49504c `feat(storage): keep tasks and categories in SQLite through the Rust crate`:
   - RED (Rust): `cargo test` with `todo!()` stubs: `test result: FAILED. 7 passed; 6 failed` (db::tests). Later the `open_in` test alone: panicked "not yet implemented", 1 failed.
   - RED (TSX): `nsh test Sqlite.test.tsx` before the store change: `error 7 tests: 1 passed, 6 failed`; after adding the `open` tests, `9 tests: 7 passed, 2 failed`.
   - GREEN: `cargo test`: 14 passed (7 time, 7 db). `make test`: `73 tests: 73 passed, 0 failed` (Rust and TSX; 9 new in Sqlite.test.tsx).

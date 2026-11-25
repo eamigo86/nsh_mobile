@@ -27,7 +27,7 @@ nothing on desktops and the web. It does what the crate's component does, so the
 
 ## Constraints
 
-- Branch `feat/nsh-datetimepicker` from `chore/nsh-0.6.0` (edca1a7). NSH 0.6.0.
+- Branch `feat/nsh-datetimepicker` from `chore/nsh-0.6.0` (5fdded8). NSH 0.6.0.
 - The uncommitted `package-ios` line in the Makefile stays out of every commit.
 - Known difference: `DateTimePicker` has no tint prop; the crate's picker drew its time in the theme's primary colour.
 
@@ -56,7 +56,7 @@ nothing on desktops and the web. It does what the crate's component does, so the
 
 ## Progress / evidence
 
-- 2026-11-18: branch created from `chore/nsh-0.6.0` at edca1a7.
+- 2026-11-18: branch created from `chore/nsh-0.6.0` at 5fdded8.
 - T2 (delegated writer): `ui/time-picker.tsx` now renders `DateTimePicker` (`mode="time"`, `testID="form-time-native"`,
   `accessibilityLabel="Due time"`) when `platform.os === "ios"` (the `platform` export of `nsh`), else the unchanged
   `TimeField`. The tint is dropped (no prop; the picker uses the system accent). The crate's `TimePicker.available`
@@ -80,7 +80,7 @@ nothing on desktops and the web. It does what the crate's component does, so the
   - GREEN: `make check` ok; `make test` 107 tests, 107 passed (114 minus the 7 removed `time` tests); `make ios-crate`
     ok (builds and packages `dist/ios-crate-sim/NSH Todo.app`; only warning is the existing placeholder app id);
     `cargo build --target aarch64-apple-ios-sim` in `rust/` compiles clean.
-- T4 (parent, inline): iOS 26.5 Simulator, `make ios-crate` build of 2e983b9. On a throwaway task (inserted in SQLite,
+- T4 (parent, inline): iOS 26.5 Simulator, `make ios-crate` build of 2ff7fd6. On a throwaway task (inserted in SQLite,
   removed after), "Due time" shows the system compact capsule (09:00, system accent, no tint); tapping it opens the
   24-hour wheels; picking 10:01 updates the capsule, Save stores `time = 10:01` in `todo.sqlite` and the list row shows
   "Nov 18, 2026 10:01". Android API 35 emulator, `make package-android`: the New Task sheet's "Due time" still shows
@@ -117,7 +117,7 @@ nothing on desktops and the web. It does what the crate's component does, so the
     verification (iOS Simulator, API 35 emulator) is the parent's.
   - Files: `ui/field.tsx`, `ui/time-picker.tsx`, `sheets/TaskSheet.tsx`, `DueDate.test.tsx`, `App.test.tsx`,
     `TimePicker.test.tsx`, this document. Commit: see `git log` (feat(tasks): use NSH's DateTimePicker for the due date).
-- T6 device checks (parent, inline), builds of 09804ad:
+- T6 device checks (parent, inline), builds of 7db0903:
   - iOS 26.5 Simulator: the New Task sheet shows "Due date: Add date" and no time row; "Add date" shows the compact
     capsule with today ("Nov 18, 2026") plus the "Due time" row and "Remove Due Date"; the capsule opens the system
     calendar; picking the 25th updates it and Save stores `due = 2026-11-25`. Editing that task shows the picker at
@@ -126,4 +126,4 @@ nothing on desktops and the web. It does what the crate's component does, so the
     the 26th and Save shows "Nov 26, 2026" in the list. The throwaway task was deleted afterwards.
   - Seen, not fixed (NSH): on iOS the capsule of an existing task first shows the short format "11/25/26", while a
     picked date shows "Nov 25, 2026"; the picker's width at first layout seems to decide the style.
-  - Follow-up commit 1026587 (style): re-indented the `DatePicker` fallback in `ui/field.tsx` (no behaviour change).
+  - Follow-up commit 9994e39 (style): re-indented the `DatePicker` fallback in `ui/field.tsx` (no behaviour change).

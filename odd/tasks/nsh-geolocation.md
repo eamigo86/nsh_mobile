@@ -53,7 +53,7 @@ Objective-C bindings from Rust and still leaves Android to a Gradle project
 
 ## Tasks
 
-- [x] T1 Branch `feat/nsh-geolocation` from `feat/nsh-todo` (8ce8648); this document. Route: inline (mechanical).
+- [x] T1 Branch `feat/nsh-geolocation` from `feat/nsh-todo` (f77b201); this document. Route: inline (mechanical).
 - [x] T2 TSX location row with tests first; iOS host project with the Swift bridge; Makefile targets; embed libraries fetched. Route: delegated writer (several non-trivial files, Xcode project).
 - [x] T3 Android host project with the Kotlin bridge. Route: delegated writer (same writer, Gradle project).
 - [x] T4 Verify on the iOS Simulator and the Android emulator with a simulated position; measure lines per platform, build times, app sizes and the dev loop (hot reload through `nsh dev`). Route: inline per-action. Evidence below (T4).
@@ -73,9 +73,9 @@ Objective-C bindings from Rust and still leaves Android to a Gradle project
 
 ## Progress / evidence
 
-- 2026-11-14: branch created from `feat/nsh-todo` at 8ce8648.
+- 2026-11-14: branch created from `feat/nsh-todo` at f77b201.
 
-- T2 (7c145be), route: delegated writer. Strict TDD, runner `make test`.
+- T2 (fe83959), route: delegated writer. Strict TDD, runner `make test`.
   - RED (before `Settings` had the card): `error 18 tests: 12 passed, 6 failed` with
     `no pressable view matches \`id:location-button\``. GREEN: `18 tests: 18 passed, 0 failed (2.2s)`;
     `make check` clean.
@@ -96,7 +96,7 @@ Objective-C bindings from Rust and still leaves Android to a Gradle project
   - Build: `make ios-host` = `xcodebuild -project native/ios/NSHTodoHost.xcodeproj -scheme NSHTodoHost -sdk iphonesimulator -configuration Debug CODE_SIGNING_ALLOWED=NO -derivedDataPath native/ios/build build`.
     `/usr/bin/time -p`: clean (derived data deleted, Xcode caches warm) real 5.83 s; no-op 1.56 s; after a Swift edit 1.83 s.
     `.app` Debug (NativeShellDev, 1 arch) 75M; Release (checked once, scratch dir) 72M. Not run on a simulator by the writer.
-- T3 (9828f55), route: same writer. AGP 9.5.1 (Kotlin built in, no kotlin plugin), Gradle 9.8.0 wrapper committed,
+- T3 (d8bbec2), route: same writer. AGP 9.5.1 (Kotlin built in, no kotlin plugin), Gradle 9.8.0 wrapper committed,
   compileSdk/targetSdk 36, minSdk 26, `androidx.activity:activity:1.12.4` for `registerForActivityResult`. `debugImplementation`
   nsh-dev.aar, `releaseImplementation` nsh.aar from `native/libs`. Bundle in `app/src/main/assets/nsh`, `loadAssetBundle("nsh")`;
   `--es dev_server ws://...` (make `DEV=1`) connects to `nsh dev`.
@@ -128,7 +128,7 @@ Objective-C bindings from Rust and still leaves Android to a Gradle project
     (`make android-host` 2.2 s incremental).
   - `make check` clean, `make test` 18/18 after the pin.
 
-- T5 (b7b1f07), route: delegated writer. Strict TDD, runner `make test`. Parent verification on devices pending (T5 not ticked).
+- T5 (6a97776), route: delegated writer. Strict TDD, runner `make test`. Parent verification on devices pending (T5 not ticked).
   - Crate: `rust/` (`nsh.json` `"rust": "rust"`), set `nshtodo/native` with `#[module] Location` and `pub async fn current() -> Result<Position, String>`
     (`Position` is `#[derive(JsObject)]`, so TS gets `Promise<Position>` and a rejection carries the `Err` text). NSH async module functions are
     supported: they run on the engine thread, so `ios.rs` hops to the main thread with `run_on_main_thread` for CoreLocation and gets the answer

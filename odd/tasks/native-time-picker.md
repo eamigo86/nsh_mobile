@@ -28,7 +28,7 @@ nativeModule").
 
 ## Constraints
 
-- Branch `feat/native-time-picker` from `feat/nsh-geolocation` (5f6ba7b), which has the crate (`rust/`).
+- Branch `feat/native-time-picker` from `feat/nsh-geolocation` (8a5ad96), which has the crate (`rust/`).
 - NSH 0.5.0; objc2 0.6 family, as the location module uses. Artifacts in English.
 
 ## TDD
@@ -42,7 +42,7 @@ nativeModule").
 ## Tasks
 
 - [x] T1 Branch and this document. Route: inline (mechanical).
-- [x] T2 Native `UIDatePicker` component in the crate and the TSX row, tests first. Route: delegated writer (Rust objc2 + TSX, several non-trivial files). Commit 5defc08.
+- [x] T2 Native `UIDatePicker` component in the crate and the TSX row, tests first. Route: delegated writer (Rust objc2 + TSX, several non-trivial files). Commit 3c19b13.
 - [x] T3 Verify on the iOS 26.5 Simulator (native compact picker opens, value saved and shown in the task row) and that Android still shows `TimeField`. Route: inline per-action.
 
 ## Acceptance criteria
@@ -53,9 +53,9 @@ nativeModule").
 
 ## Progress / evidence
 
-- 2026-11-15: branch created from `feat/nsh-geolocation` at 5f6ba7b.
+- 2026-11-15: branch created from `feat/nsh-geolocation` at 8a5ad96.
 
-- T2 (5defc08), strict TDD, runner `make test`:
+- T2 (3c19b13), strict TDD, runner `make test`:
   - RED 1: Rust `time::tests` (parse/format) with `unimplemented!()` stubs: 4 failed ("not implemented"); TSX
     `TimePicker.test.tsx` native-branch test failed (`expected false to be true`, TimeField segments still on screen).
   - GREEN 1: parse/format implemented, 4 Rust tests pass. RED 2: `to_timestamp`/`from_timestamp` tests, 3 failed.

@@ -22,7 +22,7 @@ app (`../exact_mobile`, branch `feat/exact-avatar`) to compare both frameworks (
 
 ## Constraints
 
-- Branch `feat/nsh-avatar` from `feat/nsh-onboarding` (9c0921f). NSH 0.5.0 (f4d68f7).
+- Branch `feat/nsh-avatar` from `feat/nsh-onboarding` (2531972). NSH 0.5.0 (f4d68f7).
 - Keep `make check` and `make test` green. Artifacts in English. Conventional commits, no
   attribution lines, no push.
 
@@ -50,8 +50,8 @@ app (`../exact_mobile`, branch `feat/exact-avatar`) to compare both frameworks (
 
 ## Progress / evidence
 
-- T1: branch created from 9c0921f.
-- T2 (385362d, `feat(settings): pick a profile photo and show it on Home`; route: delegated writer):
+- T1: branch created from 2531972.
+- T2 (bb53030, `feat(settings): pick a profile photo and show it on Home`; route: delegated writer):
   - RED: `make test`: `error 58 tests: 51 passed, 7 failed` (6 new avatar tests, `id:avatar` not pressable; the greeting still said "Good afternoon").
   - GREEN: `make test`: `57 tests: 57 passed, 0 failed (28.3s)`. `make check`: pass (no errors). `make ios-crate`: `packaged dist/ios-crate-sim/NSH Todo.app`. `make package-android`: `packaged dist/android/NSH Todo.apk` (about 3 s, no emulator).
   - Diff: 8 files, +210/-25 (tests 94 lines, `ui/avatar.tsx` 41, store 39, Settings 45, Home 12, domain -4).

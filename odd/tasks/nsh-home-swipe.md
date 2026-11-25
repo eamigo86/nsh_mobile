@@ -45,7 +45,7 @@ Out of scope: swipe actions on the Tasks or Categories screens, undo, web and de
 
 ## Constraints
 
-- Branch `feat/nsh-home-swipe` from `feat/nsh-chart` (6922eb1). NSH 0.5.1 (224d9a7). Do not change `native/`.
+- Branch `feat/nsh-home-swipe` from `feat/nsh-chart` (d034dde). NSH 0.5.1 (224d9a7). Do not change `native/`.
 - The uncommitted `Makefile` change (`package-ios` deployment target) is not part of this feature: never stage it here.
 - Keep the existing checks green. Artifacts in English. Conventional commits, no attribution lines, no push.
 
@@ -66,14 +66,14 @@ Out of scope: swipe actions on the Tasks or Categories screens, undo, web and de
 
 ## Progress / evidence
 
-- T1: branch created from 6922eb1.
+- T1: branch created from d034dde.
 - T2 (delegated writer, strict TDD): RED observed first: `make test` -> `error Swipe.test.tsx: building ... failed [UNRESOLVED_IMPORT] Could not resolve './ui/swipe'`
   (103 passed, 1 failed). First GREEN attempt: 6 of 10 gesture tests failed for test-side reasons only (`label:Delete matches 2 pressable views`;
   and `app.press` on a hidden action resolved: headless never reports an action under the row as covered), fixed by id selectors and by disabling
   an action unless its side is open (`app.enabled`).
   - `make check`: clean. `make test`: 114 tests: 114 passed, 0 failed (10 new in `Swipe.test.tsx`: 4 pure snap maths, 6 UI).
   - `make ios-crate`: packaged dist/ios-crate-sim/NSH Todo.app. `make package-android`: packaged dist/android/NSH Todo.apk (arm64-v8a, armeabi-v7a).
-  - Commit: b119e64 feat(home): add swipe actions to the up next rows.
+  - Commit: 8280a8c feat(home): add swipe actions to the up next rows.
   - To check on devices: drag follows the finger smoothly; snap at half an action; one row open; tap on open row closes; Edit opens the editor; Delete removes;
     Complete completes; full swipe (past 60% of the width) deletes / completes; vertical scrolling of Home still works over the rows (`panActivation`);
     glyph colours and action colours in light and dark; TalkBack/VoiceOver show "Complete", "Edit", "Delete" custom actions on the row.
@@ -103,7 +103,7 @@ Out of scope: swipe actions on the Tasks or Categories screens, undo, web and de
 - Fix: new `swipe-ink`/`swipe-complete`/`swipe-edit`/`swipe-delete` tokens (light = old values, dark = #2e9b4f/#2f7fe0/#e5484d, ink white both). `ui/swipe.ts`: `GAP = 12`, right open at 86. `ui/swipe-row.tsx`: one pan value drives the row (right only, interpolate clamp), the trailing action group (left, from off the right edge to 0), a green trail that stops 12 pt short of the row, and a delete cover that sweeps in before a full-swipe delete.
 - RED: the test API reads no view or canvas colour (only `spanStyle`), so the colour test asserts `theme.json` tokens: `expected undefined to be "#ffffff"`; the snap tests failed to build without `GAP` (103 passed, 1 failed).
 - GREEN: `make check` clean; `make test` 115 passed, 0 failed; `make ios-crate` and `make package-android` packaged. Not verified on devices (parent to check): overlay motion, gap, full-swipe cover, dark colours, and that the `deleting() &&` cover mounts reactively.
-- Commit: c0c355c.
+- Commit: 54dd750.
 
 ## Spec change (2026-11-17, user, after the first device check)
 
@@ -114,16 +114,16 @@ Out of scope: swipe actions on the Tasks or Categories screens, undo, web and de
 
 iPhone 17 Pro Simulator (iOS 26.5, `make ios-crate`) and Pixel 9 Pro XL emulator (API 35, `make package-android`).
 
-- First build (b119e64), iOS and Android:
+- First build (8280a8c), iOS and Android:
   - Snap open, Edit opens the editor, Complete, Delete, one row open at a time, tap-to-close and full-swipe delete all worked.
-  - Dark mode showed pastel actions with black glyphs; fixed in c0c355c.
+  - Dark mode showed pastel actions with black glyphs; fixed in 54dd750.
   - A transient red sliver appeared from the spring overshoot on close.
-- c0c355c regression, found on the device: a right drag moved the row by only 1 pt and Complete never showed.
+- 54dd750 regression, found on the device: a right drag moved the row by only 1 pt and Complete never showed.
   - Cause: NSH's `interpolate` defaults to `extrapolate: "clamp"`, unlike React Native's `"extend"`
     (`nsh-js-0.5.1/src/animated.rs`), so the identity mapping `[0,1] -> [0,1]` stopped at 1.
-  - Fixed in 7cfc714 with `extrapolateRight: "extend"` on the row and the green trail.
+  - Fixed in b0bd7f1 with `extrapolateRight: "extend"` on the row and the green trail.
   - No RED test is possible: no test API reads a view's translation. `make check` clean; `make test` 115 passed, 0 failed.
-- Final build (7cfc714), checked on iOS (light and dark) and Android (light):
+- Final build (b0bd7f1), checked on iOS (light and dark) and Android (light):
   - The left overlay keeps the text in place.
   - The right swipe shows Complete with the 12 pt card-colour gap.
   - Glyphs are white on saturated colours in dark.
@@ -154,7 +154,7 @@ Reading:
 
 Authored lines, final (code + tests, docs excluded):
 - Exact (`db7da0b..HEAD`): contract +32/-7, theme +6, tests +93. Code 38 lines.
-- NSH (`6922eb1..HEAD`): swipe row 107, snap maths 20, Home +16/-4, theme 8, icons +4/-1, tests 107. Code 155 lines.
+- NSH (`d034dde..HEAD`): swipe row 107, snap maths 20, Home +16/-4, theme 8, icons +4/-1, tests 107. Code 155 lines.
 
 ## Spec change 2 (2026-11-17, user)
 
@@ -163,20 +163,20 @@ Authored lines, final (code + tests, docs excluded):
 - Actions are `rounded-xl` (12 pt, the radius of the select items), inset 4 pt top and bottom (`inset-y-1`), 74 pt wide; 8 pt between Edit and Delete (`gap-2`). Open offsets: right 74 + 12 = 86, left -(74 + 8 + 74) = -156 (no edge margin).
 - RED: the snap tests with the new left offset failed (`make test`: 115 tests, 113 passed, 2 failed). GREEN: `make check` clean; `make test` 115 passed, 0 failed; `make ios-crate` and `make package-android` packaged.
 - No test API reads a view's translation or radius: the push, radius and spacing are not asserted; device check pending.
-- Commit: 3a857f4.
+- Commit: 3397eb8.
 
 ### Device verification of spec change 2, and a data-loss guard (2026-11-17)
 
-- Incident: the first device check of 3a857f4 on the iOS Simulator deleted "Prepare the sprint demo" after a 120 pt
+- Incident: the first device check of 3397eb8 on the iOS Simulator deleted "Prepare the sprint demo" after a 120 pt
   left swipe, which is not a full swipe.
   - The task was restored straight into `todo.sqlite` with id 2, Work, 2026-11-17 10:00, not done.
   - The same gesture did not delete again in two later tries, including the first gesture after a relaunch.
   - Likely cause: `settle()` compares the drag with 60% of `width`, and `width` is 0 until `onLayout` reports it, so any
     left drag in that window counted as a full swipe.
-- Fix 79f64e9: no complete or delete while `width` is 0.
+- Fix b4795f1: no complete or delete while `width` is 0.
   - TDD: RED `expected {"to":-0,"full":"delete"} to equal {"to":-156}`, then GREEN.
   - `make check` clean; `make test` 116 passed, 0 failed; `make ios-crate` and `make package-android` packaged.
-- Device check of 79f64e9, iOS 26.5 Simulator and Android API 35 emulator (light):
+- Device check of b4795f1, iOS 26.5 Simulator and Android API 35 emulator (light):
   - A left swipe pushes the whole row to show rounded Edit and Delete with 8 pt between them.
   - A right swipe shows a rounded Complete with the 12 pt gap.
   - A full left swipe deleted only a throwaway task, on both iOS and Android.
@@ -185,7 +185,7 @@ Authored lines, final (code + tests, docs excluded):
 ### Final measurement (2026-11-17, standard push + rounded actions)
 
 Same method as the earlier measurement: Pixel 9 Pro XL emulator API 35 at 60 Hz, 2 runs of 10 open/close cycles, with
-SurfaceFlinger latency on the app layer and app CPU from `/proc/<pid>/stat`. Builds: NSH 79f64e9, Exact 0f7ef93.
+SurfaceFlinger latency on the app layer and app CPU from `/proc/<pid>/stat`. Builds: NSH b4795f1, Exact 0f7ef93.
 
 | Build | Frames / gesture (median) | Interval p50 | p90 | p99 | Janky (>25 ms) | App CPU (one core) |
 |---|---|---|---|---|---|---|

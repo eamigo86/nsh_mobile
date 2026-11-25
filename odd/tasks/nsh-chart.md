@@ -38,7 +38,7 @@ Out of scope: other symbols or intervals, order books, web and desktop checks.
 
 ## Constraints
 
-- Branch `feat/nsh-chart from feat/nsh-sqlite (4b246fc)`. NSH 0.5.0 (f4d68f7). Do not change native/.
+- Branch `feat/nsh-chart from feat/nsh-sqlite (017d2ef)`. NSH 0.5.0 (f4d68f7). Do not change native/.
 - Keep the existing checks green. Artifacts in English. Conventional commits, no attribution lines, no push.
 
 ## TDD
@@ -90,7 +90,7 @@ Out of scope: other symbols or intervals, order books, web and desktop checks.
 - Performance concerns (unmeasured, to check on devices): `draw` re-records the whole chart on every pan move (about 60-200 candles, cheap) and on each 1 s flush; the crosshair readout is a `Text`
   overlay, so it re-renders on each move. Ticks are coalesced to one flush per second, so the last price moves once a second, not per tick.
 - Lines per area (new): pure logic 169, feed 93, store 79, chart + gestures 254, page 77; tests 340.
-  - Commits: 48a6148 feat(market): add a live BTC-USD candlestick chart; docs commit with this record follows.
+  - Commits: 2fada5a feat(market): add a live BTC-USD candlestick chart; docs commit with this record follows.
 
 ## Fix: pinch (device finding, iOS Simulator 26.5)
 
@@ -114,7 +114,7 @@ iPhone 17 Pro Simulator (iOS 26.5, `make ios-crate`, light) and Pixel 9 Pro XL e
 | One-finger pan | yes | not tried separately (same code) |
 | +/− and Latest | yes | yes (+/− shown) |
 | Long-press crosshair with OHLC + volume | yes (follows the finger, hides on lift) | yes |
-| Two-finger pinch | first build: NO (JS gets one touch for two fingers: a diagnostic logged `touches=1` in both `onTouchMove` and the responder); after d045c46 (native `pinch={{scale}}` + `onPinchEnd`): YES, a spread zoomed 60 -> 20 candles around the fingers | not verifiable: no way to inject two fingers on the emulator |
+| Two-finger pinch | first build: NO (JS gets one touch for two fingers: a diagnostic logged `touches=1` in both `onTouchMove` and the responder); after 883edcb (native `pinch={{scale}}` + `onPinchEnd`): YES, a spread zoomed 60 -> 20 candles around the fingers | not verifiable: no way to inject two fingers on the emulator |
 | Double-tap reset | not verifiable with the simulator tool (two taps arrive too far apart) | not tried |
 
 - Finding: NSH's raw touches and responder deliver only one finger on iOS; multi-finger gestures must use the native pinch/rotation values, which give no per-frame scale to JS (live feedback is a `scaleX` transform bound to the animated value; the real redraw happens on release).
