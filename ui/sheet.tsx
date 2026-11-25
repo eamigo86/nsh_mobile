@@ -1,8 +1,13 @@
 // A bottom sheet for forms: its content is made on each opening, so drafts start fresh.
-import { type JSX, Text, View } from "nsh";
+import { type JSX, platform, Text, View } from "nsh";
 import { Sheet } from "nsh/base";
 import { Button } from "./button";
 import { Icon } from "./icon";
+
+// NSH 0.7.0 leaves a bottom sheet behind Android's software keyboard (0.6.1 lifted it too far), so on Android the
+// panel keeps room for the keyboard itself. iOS lifts the sheet, where the room would count twice.
+// ponytail: Android-only padding; drop it once NSH lifts Android sheets for the keyboard.
+const KEYBOARD_ROOM = platform.os === "android" ? " pb-[env(keyboard-inset-height)]" : "";
 
 export function FormSheet(props: { open: boolean; onClose: () => void; children?: JSX.Element }) {
   return (
@@ -10,7 +15,7 @@ export function FormSheet(props: { open: boolean; onClose: () => void; children?
       open={props.open}
       onOpenChange={({ open }) => !open && props.onClose()}
       closeOnSwipe
-      popupClass="rounded-t-3xl bg-background"
+      popupClass={`rounded-t-3xl bg-background${KEYBOARD_ROOM}`}
       popupStyle={{ maxHeight: "92%" }}
       backdropClass="bg-scrim"
     >
