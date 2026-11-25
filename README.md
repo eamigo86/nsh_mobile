@@ -1,6 +1,6 @@
 # NSH Todo
 
-A todo app for iOS and Android built with [NSH](https://github.com/longbridge/nsh) (Native Shell), currently version 0.7.0. The app is written in TSX.
+A todo app for iOS and Android built with [NSH](https://github.com/longbridge/nsh) (Native Shell), currently version 0.7.1. The app is written in TSX.
 
 This repository is half of an Exact vs NSH comparison: the same app was built twice, once in each framework. The Exact version lives in [exact_mobile](https://github.com/eamigo86/exact_mobile).
 
@@ -16,7 +16,7 @@ This repository is half of an Exact vs NSH comparison: the same app was built tw
 
 ## Tech stack
 
-- NSH 0.7.0: CLI, runtimes and the `nsh-core` 0.7.0 crate; the embed libraries are fetched at release `v0.7.0`
+- NSH 0.7.1: CLI, runtimes and the `nsh-core` 0.7.1 crate; the embed libraries are fetched at release `v0.7.1`
 - TypeScript/TSX for the app; Rust for the app's own crate in `rust/`
 - Storage: SQLite (`rusqlite`, bundled) through the crate's `Db` module, imported as `nshtodo/native`. Where the crate is missing (web), data falls back to NSH's `Storage`
 - Location: the crate's `Location` module (CoreLocation on iOS)
@@ -90,7 +90,7 @@ The embed hosts are built with `make embed-libs`, then `make ios-host` / `make a
 
 [`odd/tasks/`](odd/tasks) holds the feature work logs written during development: objective, tasks, verification and findings for each feature.
 
-Verified so far: the iOS simulator (iOS 26.5, iPhone 17 Pro) and the Android emulator (API 35). No physical device has been tested. The `native/` embed hosts were not rebuilt on 0.6.x or 0.7.0.
+Verified so far: the iOS simulator (iOS 26.5, iPhone 17 Pro) and the Android emulator (API 35). No physical device has been tested. The `native/` embed hosts were not rebuilt on 0.6.x or 0.7.x.
 
 Known issue: on Android, NSH does not lift a sheet above the software keyboard (by design since NSH #3154; content pads by `env(keyboard-inset-height)`). The app adds that padding itself through `KEYBOARD_ROOM` in `ui/sheet.tsx`, on Android only. On iOS a sheet is lifted without shrinking and the inset is still reported inside it; this was filed as [longbridge/nsh#3288](https://github.com/longbridge/nsh/issues/3288). Re-check `KEYBOARD_ROOM` and the `Keyboard.dismiss()` calls in `sheets/TaskSheet.tsx` once a release fixes it. See [`odd/tasks/nsh-0-7-0.md`](odd/tasks/nsh-0-7-0.md).
 

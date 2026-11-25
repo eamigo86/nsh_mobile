@@ -7,7 +7,7 @@ publish = false
 [workspace]
 
 [dependencies]
-nsh-core = "0.7.0"
+nsh-core = "0.7.1"
 # SQLite compiled in (Android has no usable system one); the Db module keeps tasks and categories in it.
 rusqlite = { version = "0.42", features = ["bundled"] }
 
