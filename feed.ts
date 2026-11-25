@@ -1,8 +1,5 @@
 // The Coinbase ticker feed: one WebSocket that reconnects with growing delays. The socket and the timers are
 // injectable because the headless tests cannot receive socket messages (they refuse every connection).
-// NSH 0.6.0 packages leave the websocket feature out unless a module imports `websocket`: the global
-// WebSocket alone does not count, and without the feature the Market's socket and history never settle.
-import "websocket";
 import { backoff, parseTick, type Tick } from "./market";
 
 export const FEED_URL = "wss://ws-feed.exchange.coinbase.com";
