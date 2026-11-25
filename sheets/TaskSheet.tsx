@@ -1,5 +1,5 @@
 // The add / edit sheet. Its drafts are signals of this sheet, created on each opening from the task shown.
-import { Scroll, signal, Text, View } from "nsh";
+import { Keyboard, Scroll, signal, Text, View } from "nsh";
 import { type Task, dueText } from "../domain";
 import { allCategories, removeTask, saveTask, today } from "../store";
 import { Field, DateRow, SelectRow, TextField } from "../ui/field";
@@ -44,7 +44,10 @@ function TaskForm(props: { task: Task | null; onClose: () => void }) {
         cancelTestID="form-cancel"
         saveTestID="form-save"
       />
-      <Scroll class="shrink">
+      {/* "handled": with the keyboard up, a tap on a row or button acts at once instead of only hiding the keyboard.
+          The rows that grow or shrink the form also hide the keyboard: NSH lifts the sheet by the keyboard's height
+          without making it shorter, so a taller form with the keyboard up puts the header under the status bar. */}
+      <Scroll class="shrink" keyboardShouldPersistTaps="handled">
         <View class="gap-5 p-4 pt-1">
           <Field hintTestID="form-hint" hint={canSave() ? "" : "Enter a title to save."}>
             <TextField
@@ -75,14 +78,26 @@ function TaskForm(props: { task: Task | null; onClose: () => void }) {
               value={due()}
               today={today()}
               text={due() === "" ? "None" : dueText({ due: due(), time: "" })}
-              onChange={(v) => due.set(v)}
+              onChange={(v) => {
+                Keyboard.dismiss();
+                due.set(v);
+              }}
             />
             <If when={due() !== ""}>
               <View class="min-h-12 flex-row items-center justify-between gap-3 rounded-2xl bg-card px-4">
                 <Text class="text-base text-card-foreground">Due time</Text>
                 <If
                   when={time() !== ""}
-                  else={<TextButton testID="form-add-time" label="Add time" onPress={() => time.set(DEFAULT_TIME)} />}
+                  else={
+                    <TextButton
+                      testID="form-add-time"
+                      label="Add time"
+                      onPress={() => {
+                        Keyboard.dismiss();
+                        time.set(DEFAULT_TIME);
+                      }}
+                    />
+                  }
                 >
                   <View testID="form-time">
                     <TimePicker value={time()} onChange={(v) => time.set(v)} />
@@ -94,6 +109,7 @@ function TaskForm(props: { task: Task | null; onClose: () => void }) {
                 destructive
                 label="Remove Due Date"
                 onPress={() => {
+                  Keyboard.dismiss();
                   due.set("");
                   time.set("");
                 }}
