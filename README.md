@@ -19,6 +19,7 @@ This repository is half of an Exact vs NSH comparison: the same app was built tw
 - NSH 0.7.2: CLI, runtimes and the `nsh-core` 0.7.2 crate; the embed libraries are fetched at release `v0.7.2`
 - TypeScript/TSX for the app; Rust for the app's own crate in `rust/`
 - Storage: SQLite (`rusqlite`, bundled) through the crate's `Db` module, imported as `nshtodo/native`. Where the crate is missing (web), data falls back to NSH's `Storage`
+- Icons: `nsh-icon` with the Phosphor set (`nsh-icon-phosphor`, regular weight) through `ui/icon.tsx`; the native tab bar keeps the system's icons, since `TabBar` only takes SF Symbol / Android drawable names
 - Location: the crate's `Location` module (CoreLocation on iOS)
 - Network: `api.exchange.coinbase.com` and `ws-feed.exchange.coinbase.com`, declared in `nsh.json`
 
@@ -71,7 +72,7 @@ The tests cover the app screens and flows (`App`, `Onboarding`, `Swipe`, `DueDat
 App.tsx            root: tabs, splash, onboarding
 pages/             Home, Tasks, Categories, Market, Settings, Onboarding
 sheets/            task and category sheets
-ui/                shared controls (swipe row, ring, candles, time picker, ...)
+ui/                shared controls (swipe row, ring, candles, time picker, icons, ...)
 store.ts           app state (signals) and storage
 domain.ts          types and constants
 market.ts, feed.ts, market-store.ts   Market logic, socket feed, signals

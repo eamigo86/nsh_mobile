@@ -4,7 +4,9 @@
   "icon": "assets/brand/icon-1024.png",
   "version": "1.0.0",
   "build": 1,
-  "schemes": ["nshtodo"],
+  "schemes": [
+    "nshtodo"
+  ],
   "theme": "theme.json",
   "rust": "rust",
   "ios": {
@@ -13,9 +15,20 @@
     }
   },
   "capabilities": {
-    "network": { "hosts": ["api.exchange.coinbase.com", "ws-feed.exchange.coinbase.com"] },
+    "network": {
+      "hosts": [
+        "api.exchange.coinbase.com",
+        "ws-feed.exchange.coinbase.com"
+      ]
+    },
     "statusBar": true,
     "picker": true,
-    "host": ["location.current"]
+    "host": [
+      "location.current"
+    ]
+  },
+  "dependencies": {
+    "nsh-icon": "^0.2.2",
+    "nsh-icon-phosphor": "^0.2.2"
   }
 }
