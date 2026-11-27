@@ -1,6 +1,6 @@
 # NSH Todo
 
-A todo app for iOS and Android built with [NSH](https://github.com/longbridge/nsh) (Native Shell), currently version 0.7.1. The app is written in TSX.
+A todo app for iOS and Android built with [NSH](https://github.com/longbridge/nsh) (Native Shell), currently version 0.7.2. The app is written in TSX.
 
 This repository is half of an Exact vs NSH comparison: the same app was built twice, once in each framework. The Exact version lives in [exact_mobile](https://github.com/eamigo86/exact_mobile).
 
@@ -16,7 +16,7 @@ This repository is half of an Exact vs NSH comparison: the same app was built tw
 
 ## Tech stack
 
-- NSH 0.7.1: CLI, runtimes and the `nsh-core` 0.7.1 crate; the embed libraries are fetched at release `v0.7.1`
+- NSH 0.7.2: CLI, runtimes and the `nsh-core` 0.7.2 crate; the embed libraries are fetched at release `v0.7.2`
 - TypeScript/TSX for the app; Rust for the app's own crate in `rust/`
 - Storage: SQLite (`rusqlite`, bundled) through the crate's `Db` module, imported as `nshtodo/native`. Where the crate is missing (web), data falls back to NSH's `Storage`
 - Location: the crate's `Location` module (CoreLocation on iOS)
